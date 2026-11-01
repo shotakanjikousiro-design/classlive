@@ -1,0 +1,1759 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#3b4cca">
+<title>ClassLive 授業ライブ</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+:root{
+  --bg:#f5f6fb; --surface:#fff; --surface2:#fafbff; --ink:#1b1d2a; --muted:#646a85; --line:#e2e5ef;
+  --primary:#3b4cca; --primary-ink:#fff; --soft:#eceffd; --accent:#f5a524; --ok:#1f9d6a; --bad:#d64545;
+  --shadow:0 1px 2px rgba(20,24,60,.06),0 4px 16px rgba(20,24,60,.06);
+  --radius:14px;
+  font-family:system-ui,-apple-system,"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic UI",Meiryo,sans-serif;
+  color:var(--ink); background:var(--bg);
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#10121a; --surface:#191c27; --surface2:#1e2130; --ink:#eceef6; --muted:#9aa0b8; --line:#2b2f40;
+  --primary:#7d8bff; --primary-ink:#0e1030; --soft:#23273a; --shadow:0 1px 2px rgba(0,0,0,.3);
+}}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:var(--bg)}
+body{-webkit-tap-highlight-color:transparent}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:8px 14px;line-height:1.3;transition:transform .05s,background .15s}
+button:active{transform:scale(.97)}
+button:disabled{opacity:.45;cursor:not-allowed}
+button.primary{background:var(--primary);border-color:var(--primary);color:var(--primary-ink);font-weight:600}
+button.ghost{background:transparent;border-color:transparent}
+button.on{background:var(--soft);border-color:var(--primary);color:var(--primary);font-weight:600}
+button.danger{color:var(--bad)}
+button.big{padding:14px 20px;font-size:1.05rem;border-radius:12px}
+input[type=text],input[type=number],textarea,select{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface2);outline:none}
+input:focus,textarea:focus,select:focus{border-color:var(--primary);box-shadow:0 0 0 3px color-mix(in srgb,var(--primary) 20%,transparent)}
+label{font-size:.85rem;color:var(--muted);display:block;margin:10px 0 4px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.grow{flex:1}
+.muted{color:var(--muted)}
+.small{font-size:.82rem}
+.hide{display:none!important}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;background:var(--soft);font-size:.8rem}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--muted);display:inline-block}
+.dot.live{background:var(--ok);box-shadow:0 0 0 3px color-mix(in srgb,var(--ok) 25%,transparent)}
+.code{font-family:ui-monospace,Menlo,Consolas,monospace;letter-spacing:.12em;font-weight:700}
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:999;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none}
+#toast div{background:#1b1d2a;color:#fff;padding:10px 16px;border-radius:10px;font-size:.9rem;box-shadow:0 6px 20px rgba(0,0,0,.25);animation:pop .2s}
+@keyframes pop{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.banner{background:color-mix(in srgb,var(--accent) 18%,var(--surface));border:1px solid color-mix(in srgb,var(--accent) 45%,transparent);border-radius:12px;padding:10px 14px;font-size:.85rem}
+.modal-bg{position:fixed;inset:0;background:rgba(10,12,25,.55);display:flex;align-items:center;justify-content:center;z-index:500;padding:16px}
+.modal{background:var(--surface);border-radius:16px;max-width:520px;width:100%;padding:20px;max-height:90vh;overflow:auto}
+.qr svg{width:100%;height:auto;display:block;background:#fff;border-radius:8px}
+
+/* ---------- Home ---------- */
+.home{max-width:760px;margin:0 auto;padding:28px 16px 60px}
+.brand{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.brand h1{font-size:1.5rem;margin:0}
+.logo{width:36px;height:36px;border-radius:10px;background:var(--primary);color:var(--primary-ink);display:grid;place-items:center;font-weight:800}
+.drop{border:2px dashed var(--line);border-radius:12px;padding:22px;text-align:center;cursor:pointer;background:var(--surface2)}
+.drop.over{border-color:var(--primary);background:var(--soft)}
+.progress{height:8px;border-radius:99px;background:var(--soft);overflow:hidden}
+.progress>div{height:100%;background:var(--primary);width:0;transition:width .2s}
+.features{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-top:10px}
+.features div{font-size:.85rem;padding:10px 12px;background:var(--surface);border:1px solid var(--line);border-radius:10px}
+
+/* ---------- Teacher console ---------- */
+.tc{display:grid;grid-template-rows:auto 1fr;height:100vh;height:100dvh}
+.tc header{display:flex;gap:10px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--line);background:var(--surface);flex-wrap:wrap}
+.tc header h2{font-size:1rem;margin:0;max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tc main{display:grid;grid-template-columns:1fr 380px;min-height:0}
+.stage{display:flex;flex-direction:column;min-height:0;padding:14px;gap:10px;overflow:auto}
+.slidebox{position:relative;background:#000;border-radius:12px;overflow:hidden;aspect-ratio:16/9;max-height:62vh;display:flex;align-items:center;justify-content:center}
+.slidebox img{max-width:100%;max-height:100%;object-fit:contain;display:block}
+.slidebox .ph{color:#888}
+.navrow{display:flex;gap:10px;align-items:center}
+.navrow .cnt{font-weight:700;min-width:80px;text-align:center}
+.nextprev{display:flex;gap:12px;align-items:flex-start}
+.nextprev img{width:180px;border-radius:8px;border:1px solid var(--line)}
+.film{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px}
+.film button{padding:0;border:2px solid transparent;border-radius:8px;flex:0 0 auto;position:relative;background:#000;overflow:hidden}
+.film button.cur{border-color:var(--primary)}
+.film img{width:120px;display:block}
+.film span{position:absolute;left:4px;bottom:2px;font-size:.7rem;color:#fff;text-shadow:0 0 3px #000}
+.meter{display:flex;gap:6px;flex-wrap:wrap}
+.meter .pill{font-size:.85rem;background:var(--surface);border:1px solid var(--line)}
+.meter .pill.warn{background:color-mix(in srgb,var(--bad) 15%,var(--surface));border-color:var(--bad);color:var(--bad);font-weight:700}
+aside.side{border-left:1px solid var(--line);background:var(--surface);display:flex;flex-direction:column;min-height:0}
+.tabs{display:flex;border-bottom:1px solid var(--line)}
+.tabs button{flex:1;border:none;border-radius:0;background:transparent;padding:12px 2px;font-size:.8rem;color:var(--muted);border-bottom:2px solid transparent}
+.tabs button.cur{color:var(--primary);border-bottom-color:var(--primary);font-weight:700}
+.panel{padding:14px;overflow:auto;flex:1}
+.callcard{border-radius:12px;padding:14px;background:var(--soft);margin:12px 0;text-align:center}
+.callcard .nm{font-size:1.6rem;font-weight:800;margin:4px 0}
+.status{display:inline-block;padding:3px 10px;border-radius:99px;font-size:.85rem;font-weight:700;background:var(--surface)}
+.status.ok{color:var(--ok)} .status.dunno{color:var(--bad)} .status.think{color:var(--accent)}
+.list{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.item{display:flex;gap:8px;align-items:center;padding:8px 10px;border:1px solid var(--line);border-radius:10px;font-size:.88rem}
+.item .t{flex:1;min-width:0;overflow-wrap:anywhere}
+.item.done{opacity:.5}
+.bar{position:relative;border:1px solid var(--line);border-radius:8px;overflow:hidden;margin:5px 0;padding:7px 10px;display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:.9rem}
+.bar i{position:absolute;inset:0 auto 0 0;background:color-mix(in srgb,var(--primary) 22%,transparent);z-index:0;transition:width .3s}
+.bar.correct i{background:color-mix(in srgb,var(--ok) 35%,transparent)}
+.bar.correct{border-color:var(--ok);font-weight:700}
+.bar span{position:relative;z-index:1}
+.opts input{margin-bottom:6px}
+.sec{font-weight:700;margin:16px 0 6px;font-size:.92rem}
+.timerchip{font-variant-numeric:tabular-nums;font-weight:800}
+@media (max-width:900px){
+  .tc{height:auto;min-height:100vh}
+  .tc main{grid-template-columns:1fr}
+  aside.side{border-left:none;border-top:1px solid var(--line)}
+  .nextprev img{width:120px}
+}
+
+/* ---------- Projector ---------- */
+.pj{position:fixed;inset:0;background:#000;color:#fff;overflow:hidden;cursor:default}
+.pj .main{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+.pj .main img{max-width:100%;max-height:100%;object-fit:contain}
+.pj .ov{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(8,10,25,.86);backdrop-filter:blur(6px);animation:fade .3s}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.pj .qrfull{display:flex;gap:6vw;align-items:center}
+.pj .qrfull .qr{width:min(42vh,40vw)}
+.pj .qrfull h1{font-size:4.5vh;margin:0 0 2vh}
+.pj .qrfull .url{font-size:2.2vh;opacity:.8;word-break:break-all;max-width:40vw}
+.pj .qrfull .code{font-size:7vh;margin:2vh 0}
+.pj .qrmini{position:absolute;right:16px;bottom:16px;width:15vh;background:#fff;padding:6px;border-radius:10px;color:#000;text-align:center;font-size:1.4vh;font-weight:700}
+.pj .timer{position:absolute;top:16px;right:20px;font-size:7vh;font-weight:800;font-variant-numeric:tabular-nums;background:rgba(0,0,0,.65);padding:.5vh 2.5vh;border-radius:2vh}
+.pj .timer.low{color:#ff6b6b}
+.pj .call{text-align:center}
+.pj .call .lbl{font-size:3.4vh;opacity:.8;letter-spacing:.2em}
+.pj .call .nm{font-size:14vh;font-weight:900;margin:2vh 0;min-height:16vh}
+.pj .call.landed .nm{color:#ffd166;text-shadow:0 0 40px rgba(255,209,102,.6);animation:land .5s}
+@keyframes land{0%{transform:scale(.6)}60%{transform:scale(1.15)}100%{transform:scale(1)}}
+.pj .call .q{font-size:4vh;max-width:80vw;margin:0 auto}
+.pj .call .cst{font-size:3.5vh;margin-top:3vh}
+.pj .poll{width:min(1100px,86vw)}
+.pj .poll h2{font-size:4.6vh;margin:0 0 3vh}
+.pj .poll .bar{border-color:rgba(255,255,255,.25);font-size:3.6vh;padding:1.6vh 2vh;margin:1.2vh 0}
+.pj .poll .bar i{background:rgba(125,139,255,.45)}
+.pj .poll .bar.correct{border-color:#3ddc97}
+.pj .poll .bar.correct i{background:rgba(61,220,151,.45)}
+.pj .poll .meta{font-size:2.6vh;opacity:.75}
+.pj .qa{max-width:80vw;font-size:6vh;text-align:center;line-height:1.5}
+.pj .tools{position:absolute;left:12px;bottom:12px;display:flex;gap:6px;opacity:0;transition:opacity .3s}
+.pj:hover .tools{opacity:1}
+.pj .tools button{background:rgba(255,255,255,.12);color:#fff;border-color:rgba(255,255,255,.2)}
+.pj .count{position:absolute;left:16px;top:14px;font-size:2vh;opacity:.6}
+
+/* ---------- Student ---------- */
+.st{max-width:760px;margin:0 auto;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column}
+.st header{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--surface);border-bottom:1px solid var(--line)}
+.st header .ttl{font-weight:700;flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.st .body{flex:1;padding:12px 12px 90px}
+.st .slide{position:relative;background:#000;border-radius:12px;overflow:hidden;aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;touch-action:pan-y}
+.st .slide img{width:100%;height:100%;object-fit:contain}
+.st .slide .ph{color:#888;font-size:.9rem}
+.st .live-back{position:absolute;left:50%;top:10px;transform:translateX(-50%);background:var(--accent);color:#1b1d2a;border:none;font-weight:700;box-shadow:0 2px 10px rgba(0,0,0,.3)}
+.st .snav{display:flex;align-items:center;justify-content:space-between;margin:8px 2px}
+.react{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:6px}
+.react button{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 4px;font-size:.75rem}
+.react button b{font-size:1.3rem}
+.st nav.bottom{position:fixed;left:0;right:0;bottom:0;display:flex;justify-content:center;background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom);z-index:6}
+.st nav.bottom div{display:flex;max-width:760px;width:100%}
+.st nav.bottom button{flex:1;border:none;border-radius:0;background:transparent;padding:10px 4px;font-size:.78rem;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:2px}
+.st nav.bottom button b{font-size:1.2rem}
+.st nav.bottom button.cur{color:var(--primary);font-weight:700}
+.join{max-width:440px;margin:0 auto;padding:40px 18px}
+.alert-call{position:fixed;inset:0;z-index:100;background:linear-gradient(160deg,#ffb020,#ff6a3d);color:#1b1000;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;animation:fade .25s}
+.alert-call .ring{font-size:5rem;animation:ring 1s infinite}
+@keyframes ring{0%,100%{transform:rotate(0)}10%{transform:rotate(18deg)}20%{transform:rotate(-16deg)}30%{transform:rotate(12deg)}40%{transform:rotate(-8deg)}50%{transform:rotate(0)}}
+.alert-call h1{font-size:1.9rem;margin:10px 0}
+.alert-call .q{background:rgba(255,255,255,.55);border-radius:12px;padding:12px 16px;font-size:1.1rem;max-width:520px;margin:6px 0 20px}
+.alert-call .btns{display:flex;flex-direction:column;gap:10px;width:100%;max-width:340px}
+.alert-call button{border:none;padding:16px;font-size:1.1rem;font-weight:700;border-radius:14px;background:#fff;color:#1b1000}
+.alert-call button.go{background:#1b1d2a;color:#fff}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:50;background:var(--surface);border-radius:18px 18px 0 0;box-shadow:0 -10px 40px rgba(0,0,0,.25);padding:18px 16px calc(18px + env(safe-area-inset-bottom));max-height:80vh;overflow:auto;animation:up .25s}
+@keyframes up{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
+.sheet .opt{display:block;width:100%;text-align:left;padding:14px 16px;margin:8px 0;font-size:1.05rem;border-radius:12px}
+.sheet .opt.sel{background:var(--primary);color:var(--primary-ink);border-color:var(--primary);font-weight:700}
+.sheet .opt.correct{border:2px solid var(--ok)}
+.mini-banner{position:fixed;left:12px;right:12px;bottom:76px;z-index:40;background:var(--primary);color:var(--primary-ink);border-radius:12px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;box-shadow:var(--shadow);max-width:736px;margin:0 auto}
+.mini-banner.amber{background:var(--accent);color:#1b1000}
+.mic{display:flex;align-items:center;justify-content:center;gap:8px;width:100%}
+.mic.rec{background:var(--bad);border-color:var(--bad);color:#fff;animation:pulse 1.4s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--bad) 50%,transparent)}100%{box-shadow:0 0 0 14px transparent}}
+.interim{color:var(--muted);font-size:.9rem;min-height:1.3em;margin:6px 0;font-style:italic}
+.oqq{font-size:1.15rem;font-weight:700;background:var(--soft);border-radius:12px;padding:12px 14px;margin:8px 0 10px;line-height:1.5}
+.ans .who{font-size:.75rem;color:var(--muted)}
+.pj .oq{width:min(1300px,90vw);text-align:center}
+.pj .oq .lbl{font-size:3vh;opacity:.7;margin-bottom:2vh}
+.pj .oq h2{font-size:5.4vh;margin:0 0 2vh;line-height:1.4}
+.pj .oq .meta{font-size:2.8vh;opacity:.75}
+.pj .wall{display:grid;grid-template-columns:repeat(auto-fill,minmax(24vw,1fr));gap:1.4vh;max-height:58vh;overflow:hidden;margin-top:3vh;text-align:left}
+.pj .wall div{background:rgba(255,255,255,.1);border-radius:1.2vh;padding:1.4vh 1.8vh;font-size:2.5vh;line-height:1.4;animation:fade .4s}
+.pj .pick{font-size:6vh;line-height:1.5;max-width:80vw;margin:0 auto;font-weight:700}
+.mini-banner.second{bottom:136px}
+label.row{display:flex}
+#gemKey{flex:1;min-width:0}
+button{white-space:nowrap}
+.lvl{height:8px;border-radius:99px;background:var(--soft);overflow:hidden;margin-top:8px}
+.lvl i{display:block;height:100%;width:0;background:var(--ok);transition:width .08s}
+.lvl.low i{background:var(--accent)}
+details.set{margin-top:12px;border:1px solid var(--line);border-radius:10px;padding:8px 12px;background:var(--surface2)}
+details.set summary{cursor:pointer;font-size:.88rem;font-weight:600}
+.mbar{display:none}
+@media (max-width:900px){
+  .mbar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:60;gap:6px;padding:8px 8px calc(8px + env(safe-area-inset-bottom));background:var(--surface);border-top:1px solid var(--line)}
+  .mbar button{flex:1;padding:14px 4px;font-size:1rem;font-weight:700}
+  .mbar button.rec{background:var(--bad);color:#fff;border-color:var(--bad)}
+  .tc{padding-bottom:84px}
+  .tc header .hide-m{display:none}
+  .stage .film,.stage .nextprev,.stage .shortcut{display:none}
+  .slidebox{max-height:32vh}
+}
+.headtimer{font-variant-numeric:tabular-nums;font-weight:800;background:var(--accent);color:#1b1000;border-radius:8px;padding:2px 8px}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="toast"></div>
+<script>
+/* =====================================================================
+   ClassLive 授業ライブ
+   ---------------------------------------------------------------------
+   ★ ここに Firebase の設定を貼り付けてください（手順書 参照）。
+     null のままだと「デモモード」になり、同じパソコン・同じブラウザの
+     タブ同士でだけ動きます（お試し用）。
+   ===================================================================== */
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyA0K0HjxHUWoIpbOINXBr-wLJrFlZTgLAw",
+  authDomain: "claive-d86fa.firebaseapp.com",
+  databaseURL: "https://claive-d86fa-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "claive-d86fa",
+  appId: "1:586990801722:web:b911c428eff802617c7603"
+};
+/* 例:
+const FIREBASE_CONFIG = {
+  apiKey: "AIza....",
+  authDomain: "your-project.firebaseapp.com",
+  databaseURL: "https://your-project-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "your-project",
+  appId: "1:1234567890:web:abcdef"
+};
+*/
+
+/* ★ PowerPoint を高精度に変換するための Google OAuth クライアントID（任意）。
+     null の場合はブラウザ内の簡易変換を使います。 */
+const GOOGLE_CLIENT_ID = "586990801722-7n4jg9vv6c9ce4co61sg7b8lsksgctjj.apps.googleusercontent.com";
+
+const LIB = {
+  pptx: "https://cdn.jsdelivr.net/npm/pptx-preview@1.0.7/dist/pptx-preview.umd.js",
+  h2i: "https://cdn.jsdelivr.net/npm/html-to-image@1.11.13/dist/html-to-image.js",
+  gis: "https://accounts.google.com/gsi/client",
+  qr: "https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js",
+  pdf: "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+  pdfWorker: "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js",
+  fbApp: "https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js",
+  fbDb: "https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js",
+};
+
+/* ============================ Utilities ============================ */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const app = $("#app");
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+function rid(n = 10, abc = "abcdefghijkmnopqrstuvwxyz23456789") {
+  const a = crypto.getRandomValues(new Uint32Array(n)); let s = "";
+  for (const x of a) s += abc[x % abc.length]; return s;
+}
+function randInt(n) { return crypto.getRandomValues(new Uint32Array(1))[0] % n; }
+function hash(s) { let h = 2166136261; for (const c of String(s)) { h ^= c.codePointAt(0); h = Math.imul(h, 16777619); } return (h >>> 0).toString(36); }
+function toast(msg, ms = 2600) { const d = document.createElement("div"); d.textContent = msg; $("#toast").appendChild(d); setTimeout(() => d.remove(), ms); }
+const loaded = {};
+function loadScript(src) {
+  return loaded[src] ||= new Promise((ok, ng) => { const s = document.createElement("script"); s.src = src; s.onload = ok; s.onerror = () => ng(new Error("読み込み失敗: " + src)); document.head.appendChild(s); });
+}
+function fmtTime(t) { if (!t) return ""; const d = new Date(t); return d.toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" }); }
+function fmtSec(ms) { const s = Math.max(0, Math.ceil(ms / 1000)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`; }
+function lsGet(k, d = null) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } }
+function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+async function qrSvg(text) {
+  await loadScript(LIB.qr);
+  const q = qrcode(0, "L"); q.addData(text); q.make();
+  return q.createSvgTag({ cellSize: 8, margin: 4, scalable: true });
+}
+function baseUrl() { return location.origin + location.pathname; }
+function joinUrl(code) { return `${baseUrl()}?s=${code}`; }
+function download(name, text, type = "text/plain") {
+  const blob = new Blob([text], { type: type + ";charset=utf-8" });
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
+let audioCtx = null;
+function unlockAudio() { try { audioCtx ||= new (window.AudioContext || window.webkitAudioContext)(); audioCtx.resume(); } catch (e) {} }
+function chime(kind = "call") {
+  if (!audioCtx) return;
+  const seq = kind === "call" ? [[880, 0], [1175, .18], [1568, .36], [1175, .7], [1568, .88]] : kind === "end" ? [[660, 0], [440, .3]] : [[988, 0]];
+  const t0 = audioCtx.currentTime;
+  for (const [f, dt] of seq) {
+    const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+    o.type = "sine"; o.frequency.value = f; o.connect(g); g.connect(audioCtx.destination);
+    g.gain.setValueAtTime(0.0001, t0 + dt); g.gain.exponentialRampToValueAtTime(0.35, t0 + dt + .02); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dt + .32);
+    o.start(t0 + dt); o.stop(t0 + dt + .35);
+  }
+}
+// 音声認識結果のフィラー（えー・あのー等）を除去し、疑問文なら「？」を付ける
+function cleanSpeech(s) {
+  s = String(s || "").replace(/(えーっと|えっと|えーと|ええと|えー+|あのー+|あのぉ+|そのー+|まあ|うーん|んー+)[、,\s]*/g, "").replace(/[ \t]+/g, " ").trim();
+  if (s && /(か|かな|の|でしょう|だろう|ですか)$/.test(s)) s += "？";
+  return s;
+}
+const ENG_KEY = "classlive-eng", GEM_KEY = "classlive-gemkey", MIC_KEY = "classlive-mic";
+// 録音（Float32の配列）を16kHzモノラルWAV（base64）にする。音量も正規化。
+function encodeWav(chunks, inRate, outRate = 16000) {
+  const len = chunks.reduce((a, c) => a + c.length, 0);
+  if (len < inRate * 0.4) return null;
+  const all = new Float32Array(len); let o = 0; for (const c of chunks) { all.set(c, o); o += c.length; }
+  const ratio = inRate / outRate, n = Math.floor(len / ratio), out = new Float32Array(n);
+  for (let i = 0; i < n; i++) { const a = Math.floor(i * ratio), b = Math.min(len, Math.floor((i + 1) * ratio)); let s = 0; for (let j = a; j < b; j++) s += all[j]; out[i] = s / Math.max(1, b - a); }
+  let peak = 0; for (const v of out) peak = Math.max(peak, Math.abs(v));
+  const g = peak > 0.001 ? Math.min(20, 0.9 / peak) : 1;
+  const buf = new ArrayBuffer(44 + n * 2), dv = new DataView(buf);
+  const w = (p, str) => { for (let i = 0; i < str.length; i++) dv.setUint8(p + i, str.charCodeAt(i)); };
+  w(0, "RIFF"); dv.setUint32(4, 36 + n * 2, true); w(8, "WAVE"); w(12, "fmt "); dv.setUint32(16, 16, true); dv.setUint16(20, 1, true); dv.setUint16(22, 1, true);
+  dv.setUint32(24, outRate, true); dv.setUint32(28, outRate * 2, true); dv.setUint16(32, 2, true); dv.setUint16(34, 16, true); w(36, "data"); dv.setUint32(40, n * 2, true);
+  for (let i = 0; i < n; i++) { const v = Math.max(-1, Math.min(1, out[i] * g)); dv.setInt16(44 + i * 2, v < 0 ? v * 0x8000 : v * 0x7fff, true); }
+  let bin = ""; const u8 = new Uint8Array(buf); for (let i = 0; i < u8.length; i += 0x8000) bin += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000));
+  return btoa(bin);
+}
+async function geminiTranscribe(wavB64, slideB64, title) {
+  const key = lsGet(GEM_KEY, ""); if (!key) throw new Error("Gemini APIキーが未設定です");
+  const prompt = `これは大学の授業で、教員が学生全員に口頭で出した質問の録音です。授業名：「${title || ""}」。` +
+    (slideB64 ? "添付画像は今スクリーンに映しているスライドです。専門用語や固有名詞の表記の参考にしてください（スライドの文章を問題文に混ぜないこと）。" : "") +
+    "録音を正確に文字起こしし、学生に出題する問題文として整えてください。「えー」「あのー」などのフィラーや言い直しは除き、意味は変えず、内容を付け足さないでください。数式や記号は読みやすい表記に。出力は問題文だけにしてください（前置き・引用符・説明は不要）。質問が聞き取れない場合は何も出力しないでください。";
+  const parts = [{ text: prompt }, { inline_data: { mime_type: "audio/wav", data: wavB64 } }];
+  if (slideB64) parts.push({ inline_data: { mime_type: "image/jpeg", data: slideB64 } });
+  const models = ["gemini-2.5-flash", "gemini-3.6-flash", "gemini-2.5-flash-lite"];
+  let lastErr = null;
+  for (const m of models) {
+    const body = { contents: [{ role: "user", parts }], generationConfig: { temperature: 0, ...(m.startsWith("gemini-2.5") ? { thinkingConfig: { thinkingBudget: 0 } } : {}) } };
+    let r;
+    try { r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent`, { method: "POST", headers: { "Content-Type": "application/json", "x-goog-api-key": key }, body: JSON.stringify(body) }); }
+    catch (e) { throw new Error("通信できませんでした"); }
+    if (r.ok) {
+      const j = await r.json();
+      return (j.candidates?.[0]?.content?.parts || []).map(p => p.text || "").join("").trim().replace(/^「|」$/g, "");
+    }
+    const t = await r.text().catch(() => "");
+    if (r.status === 400 && /API key|API_KEY/i.test(t)) throw new Error("APIキーが正しくありません");
+    if (r.status === 403) throw new Error("APIキーの権限がありません（Generative Language API が有効か確認）");
+    lastErr = new Error(r.status === 429 ? "無料枠の上限に達しました。しばらく待ってください" : `エラー ${r.status}`);
+    if (![404, 429, 500, 503].includes(r.status)) break;
+  }
+  throw lastErr || new Error("文字起こしできませんでした");
+}
+const OPT_LABELS = "ABCDEFGH";
+const REACTS = [
+  { k: "ok", e: "👍", t: "わかった" },
+  { k: "again", e: "🤔", t: "もう一度" },
+  { k: "slow", e: "🐢", t: "ゆっくり" },
+  { k: "fast", e: "⚡", t: "はやく" },
+];
+const CALL_ST = { pending: ["通知中…", ""], ok: ["✋ 答えます", "ok"], think: ["🤔 考え中", "think"], dunno: ["🙇 わかりません", "dunno"] };
+
+/* ============================ Data layer ============================
+   Firebase Realtime Database と、デモ用（BroadcastChannel）で同じ API。
+   ==================================================================== */
+let DB;
+async function makeFirebaseDB() {
+  await loadScript(LIB.fbApp); await loadScript(LIB.fbDb);
+  firebase.initializeApp(FIREBASE_CONFIG);
+  const db = firebase.database();
+  let offset = 0; db.ref(".info/serverTimeOffset").on("value", s => offset = s.val() || 0);
+  return {
+    mode: "firebase",
+    now: () => Date.now() + offset,
+    set: (p, v) => db.ref(p).set(v),
+    update: (p, v) => db.ref(p).update(v),
+    remove: p => db.ref(p).remove(),
+    push: (p, v) => { const r = db.ref(p).push(); r.set(v); return r.key; },
+    get: p => db.ref(p).once("value").then(s => s.val()),
+    on: (p, cb) => { const r = db.ref(p); const f = s => cb(s.val()); r.on("value", f); return () => r.off("value", f); },
+    presence: p => {
+      const r = db.ref(p);
+      db.ref(".info/connected").on("value", s => {
+        if (s.val() === true) { r.onDisconnect().update({ online: false }); r.update({ online: true, lastSeen: firebase.database.ServerValue.TIMESTAMP }); }
+      });
+    },
+    onConnection: cb => db.ref(".info/connected").on("value", s => cb(!!s.val())),
+  };
+}
+function makeDemoDB() {
+  const LSK = "classlive-demo-tree";
+  const ch = new BroadcastChannel("classlive-demo");
+  const me = rid(8);
+  let tree = lsGet(LSK, {}) || {};
+  const listeners = new Set();
+  const clone = v => v == null ? null : JSON.parse(JSON.stringify(v));
+  const parts = p => String(p).split("/").filter(Boolean);
+  function getAt(p) { let n = tree; for (const k of parts(p)) { if (n == null || typeof n !== "object") return null; n = n[k]; } return n === undefined ? null : n; }
+  function setAt(p, v) {
+    const ks = parts(p); if (!ks.length) { tree = clone(v) || {}; return; }
+    let n = tree;
+    for (let i = 0; i < ks.length - 1; i++) {
+      if (n[ks[i]] == null || typeof n[ks[i]] !== "object") { if (v == null) return; n[ks[i]] = {}; }
+      n = n[ks[i]];
+    }
+    if (v == null) delete n[ks.at(-1)]; else n[ks.at(-1)] = clone(v);
+  }
+  let saveT = 0;
+  function save() {
+    clearTimeout(saveT);
+    try { localStorage.setItem(LSK, JSON.stringify(tree)); }
+    catch (e) { // 容量オーバー時はスライド画像を除いて保存
+      try { const t = clone(tree); for (const s of Object.values(t.sessions || {})) delete s.slides; localStorage.setItem(LSK, JSON.stringify(t)); } catch (e2) {}
+    }
+  }
+  function persist() { clearTimeout(saveT); saveT = setTimeout(save, 400); }
+  addEventListener("pagehide", save);
+  function rel(a, b) { return a === b || a.startsWith(b + "/") || b.startsWith(a + "/") || a === "" || b === ""; }
+  function notify(paths) {
+    for (const L of listeners) if (paths.some(p => rel(parts(p).join("/"), L.path))) {
+      const v = clone(getAt(L.path)); setTimeout(() => L.cb(v), 0);
+    }
+  }
+  function apply(op) {
+    const changed = [];
+    if (op.t === "set") { setAt(op.p, op.v); changed.push(op.p); }
+    else if (op.t === "update") { for (const [k, v] of Object.entries(op.v)) { setAt(op.p + "/" + k, v); changed.push(op.p + "/" + k); } }
+    notify(changed); persist();
+  }
+  function local(op) { apply(op); ch.postMessage({ t: "op", op }); return Promise.resolve(); }
+  ch.onmessage = e => {
+    const m = e.data;
+    if (m.t === "op") apply(m.op);
+    else if (m.t === "syncreq" && Object.keys(tree).length) ch.postMessage({ t: "sync", to: m.from, tree });
+    else if (m.t === "sync" && m.to === me) { tree = m.tree; notify([""]); persist(); }
+  };
+  ch.postMessage({ t: "syncreq", from: me });
+  return new Promise(ok => setTimeout(() => ok({
+    mode: "demo",
+    now: () => Date.now(),
+    set: (p, v) => local({ t: "set", p, v }),
+    update: (p, v) => local({ t: "update", p, v }),
+    remove: p => local({ t: "set", p, v: null }),
+    push: (p, v) => { const k = Date.now().toString(36) + rid(4); local({ t: "set", p: p + "/" + k, v }); return k; },
+    get: p => Promise.resolve(clone(getAt(p))),
+    on: (p, cb) => { const L = { path: parts(p).join("/"), cb }; listeners.add(L); const v = clone(getAt(p)); setTimeout(() => cb(v), 0); return () => listeners.delete(L); },
+    presence: p => {
+      const beat = () => local({ t: "update", p, v: { online: true, lastSeen: Date.now() } });
+      beat(); setInterval(beat, 8000);
+      addEventListener("pagehide", () => local({ t: "update", p, v: { online: false } }));
+    },
+    onConnection: cb => cb(true),
+    flush: save,
+  }), 300));
+}
+function isOnline(p) { return !!(p && p.online && (DB.mode === "firebase" || DB.now() - (p.lastSeen || 0) < 25000)); }
+const SP = code => `sessions/${code}`;
+
+/* ============================ Router ============================ */
+(async function boot() {
+  try {
+    DB = FIREBASE_CONFIG ? await makeFirebaseDB() : await makeDemoDB();
+  } catch (e) {
+    app.innerHTML = `<div class="home"><div class="card"><h2>接続できませんでした</h2><p class="muted">${esc(e.message)}</p><p class="small muted">Firebase の設定（FIREBASE_CONFIG）とネット接続を確認してください。</p></div></div>`;
+    return;
+  }
+  if ("serviceWorker" in navigator && location.protocol.startsWith("http")) navigator.serviceWorker.register("sw.js").catch(() => {});
+  const q = new URLSearchParams(location.search);
+  if (q.get("s")) studentPage(q.get("s").toUpperCase());
+  else if (q.get("p")) projectorPage(q.get("p").toUpperCase(), q.get("k"));
+  else if (q.get("h")) teacherConsole(q.get("h").toUpperCase(), q.get("k"));
+  else teacherHome();
+})();
+
+/* ============================ Teacher: Home ============================ */
+// 学生のスマホから参加できない状態かどうか（理由のリストを返す）
+function joinProblems() {
+  const r = [];
+  if (location.protocol === "file:") {
+    r.push(/\.zip|\\temp\\|\/temp\//i.test(decodeURIComponent(location.href))
+      ? "zipファイルの中から直接開いています。まず zip を「すべて展開」してください。"
+      : "パソコン内のファイル（file://〜）として開いています。スマホからはパソコン内のファイルは開けません。");
+    r.push("インターネットに公開したURL（https://〜）で開く必要があります（手順書の「3. 公開」）。");
+  }
+  if (DB.mode === "demo") r.push("Firebase が未設定です（手順書の「1」「2」）。設定するまでは同じパソコンのタブ同士でしか動きません。");
+  return r;
+}
+function demoBanner() {
+  const pr = joinProblems();
+  return pr.length ? `<div class="banner" style="margin:14px 0">⚠ <b>この状態では学生のスマホから参加できません（お試しモード）</b><ul style="margin:6px 0 0;padding-left:20px">${pr.map(x => `<li>${esc(x)}</li>`).join("")}</ul></div>` : "";
+}
+function teacherHome() {
+  const past = (lsGet("classlive-sessions", []) || []).slice(0, 5);
+  app.innerHTML = `
+  <div class="home">
+    <div class="brand"><div class="logo">CL</div><h1>ClassLive 授業ライブ</h1></div>
+    <p class="muted" style="margin-top:0">スライドを学生のスマホと同期。ランダム指名・投票・匿名質問をひとつの画面で。</p>
+    ${demoBanner()}
+    <div class="card">
+      <h3 style="margin-top:0">新しい授業を始める</h3>
+      <label>授業タイトル</label>
+      <input type="text" id="title" placeholder="例：放射線物理学 第5回" maxlength="60">
+      <label>スライド（PowerPoint・PDF・画像）</label>
+      <div class="drop" id="drop"><b>PowerPoint（.pptx）または PDF をここにドロップ</b><br><span class="small muted">またはクリックして選択。スライドを書き出した画像（PNG/JPEG）を複数まとめて選ぶこともできます</span><input type="file" id="file" accept=".pptx,.pdf,application/pdf,application/vnd.openxmlformats-officedocument.presentationml.presentation,image/png,image/jpeg" multiple class="hide"></div>
+      <div id="fname" class="small muted" style="margin-top:6px"></div>
+      <div class="row" style="margin-top:14px">
+        <button class="primary big" id="start" disabled>授業を開始</button>
+        <button id="sample">サンプルスライドで試す</button>
+      </div>
+      <div id="prog" class="hide" style="margin-top:14px"><div class="small muted" id="progt">準備中…</div><div class="progress"><div></div></div></div>
+    </div>
+    ${past.length ? `<div class="card" style="margin-top:14px"><h3 style="margin-top:0">前回の授業を再開</h3><div class="list">${past.map(s => `
+      <div class="item"><div class="t"><b>${esc(s.title)}</b><div class="small muted">${new Date(s.at).toLocaleString("ja-JP")}・コード <span class="code">${s.code}</span></div></div>
+      <button data-open="${s.code}|${s.key}">開く</button></div>`).join("")}</div></div>` : ""}
+    <div class="features">
+      <div>📡 <b>スライド同期</b><br><span class="muted">先生がめくると全員の画面も切り替わる</span></div>
+      <div>🎯 <b>ランダム指名</b><br><span class="muted">当たった学生のスマホに通知・振動</span></div>
+      <div>📊 <b>その場投票</b><br><span class="muted">5択・4択・○×を即集計、正解発表</span></div>
+      <div>🙋 <b>匿名質問</b><br><span class="muted">いいねで人気順に並ぶ</span></div>
+      <div>🐢 <b>反応メーター</b><br><span class="muted">「もう一度」が多いとすぐわかる</span></div>
+      <div>⏱ <b>タイマー・出席CSV</b><br><span class="muted">考える時間、参加記録の書き出し</span></div>
+    </div>
+  </div>`;
+  let file = null, kind = null;
+  const drop = $("#drop"), fileIn = $("#file");
+  const pick = fl => {
+    const fs = [...(fl || [])]; if (!fs.length) return;
+    const f = fs[0];
+    if (/\.pptx$/i.test(f.name)) { kind = "pptx"; file = f; $("#fname").innerHTML = `📊 ${esc(f.name)}<br><span class="muted">PowerPoint は ${GOOGLE_CLIENT_ID ? "Googleドライブで高精度に変換します（初回はGoogleへのログインを求められます）" : "ブラウザ内で変換します"}。変換後に確認画面が出ます。</span>`; }
+    else if (/\.ppt$/i.test(f.name)) return toast("古い形式（.ppt）は読み込めません。PowerPointで .pptx か PDF で保存し直してください", 6000);
+    else if (f.type === "application/pdf" || /\.pdf$/i.test(f.name)) { kind = "pdf"; file = f; $("#fname").textContent = "📄 " + f.name; }
+    else if (fs.every(x => /^image\/(png|jpeg)$/.test(x.type))) { kind = "img"; file = fs.sort((a, b) => a.name.localeCompare(b.name, "ja", { numeric: true })); $("#fname").textContent = `🖼 画像 ${fs.length}枚（ファイル名順）`; }
+    else return toast("PowerPoint（.pptx）・PDF・画像を選んでください");
+    $("#start").disabled = false;
+    if (!$("#title").value) $("#title").value = (kind === "img" ? "" : f.name.replace(/\.(pdf|pptx)$/i, ""));
+  };
+  drop.onclick = () => fileIn.click();
+  fileIn.onchange = () => pick(fileIn.files);
+  drop.ondragover = e => { e.preventDefault(); drop.classList.add("over"); };
+  drop.ondragleave = () => drop.classList.remove("over");
+  drop.ondrop = e => { e.preventDefault(); drop.classList.remove("over"); pick(e.dataTransfer.files); };
+  $$("[data-open]").forEach(b => b.onclick = () => { const [c, k] = b.dataset.open.split("|"); location.href = `?h=${c}&k=${k}`; });
+  const prog = (t, r) => { $("#prog").classList.remove("hide"); $("#progt").textContent = t; $("#prog .progress div").style.width = Math.round(r * 100) + "%"; };
+  const run = async (getSlides, review = true) => {
+    $("#start").disabled = $("#sample").disabled = true;
+    const reset = () => { $("#start").disabled = !file; $("#sample").disabled = false; $("#prog").classList.add("hide"); };
+    try {
+      const res = await getSlides();
+      const slides = Array.isArray(res) ? res : res.slides;
+      if (!slides.length) throw new Error("スライドが0枚でした");
+      if (review && !(await reviewSlides(slides, res.note))) return reset();
+      const title = $("#title").value.trim() || "授業";
+      await createSession(title, slides, prog);
+    } catch (e) { console.error(e); toast("エラー：" + e.message, 6000); reset(); }
+  };
+  const P5 = (lbl) => (i, n) => prog(`${lbl}… ${i}/${n}`, i / n * .5);
+  $("#start").onclick = () => run(() =>
+    kind === "pptx" ? pptxToImages(file, prog) :
+    kind === "img" ? imagesToSlides(file, P5("画像を読み込み中")) :
+    pdfToImages(file, P5("PDFを画像に変換中")));
+  $("#sample").onclick = () => { if (!$("#title").value) $("#title").value = "サンプル講義"; run(async () => makeSampleSlides(), false); };
+}
+async function pdfToImages(file, onProg) {
+  await loadScript(LIB.pdf);
+  pdfjsLib.GlobalWorkerOptions.workerSrc = LIB.pdfWorker;
+  const pdf = await pdfjsLib.getDocument({ data: file instanceof ArrayBuffer ? file : await file.arrayBuffer() }).promise;
+  const W = DB.mode === "demo" ? 1280 : 1600, Q = DB.mode === "demo" ? .7 : .8;
+  const out = [];
+  for (let i = 1; i <= pdf.numPages; i++) {
+    onProg(i, pdf.numPages);
+    const page = await pdf.getPage(i);
+    const v1 = page.getViewport({ scale: 1 });
+    const vp = page.getViewport({ scale: W / v1.width });
+    const c = document.createElement("canvas"); c.width = Math.round(vp.width); c.height = Math.round(vp.height);
+    const ctx = c.getContext("2d"); ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, c.width, c.height);
+    await page.render({ canvasContext: ctx, viewport: vp }).promise;
+    out.push(c.toDataURL("image/jpeg", Q));
+  }
+  return out;
+}
+async function imagesToSlides(files, onProg) {
+  const out = [];
+  for (const [i, f] of files.entries()) {
+    onProg(i + 1, files.length);
+    const url = await new Promise((ok, ng) => { const r = new FileReader(); r.onload = () => ok(r.result); r.onerror = ng; r.readAsDataURL(f); });
+    const img = await new Promise((ok, ng) => { const im = new Image(); im.onload = () => ok(im); im.onerror = () => ng(new Error("画像を読めません: " + f.name)); im.src = url; });
+    const W = Math.min(1600, img.naturalWidth), H = Math.round(img.naturalHeight * W / img.naturalWidth);
+    const c = document.createElement("canvas"); c.width = W; c.height = H; const x = c.getContext("2d");
+    x.fillStyle = "#fff"; x.fillRect(0, 0, W, H); x.drawImage(img, 0, 0, W, H);
+    out.push(c.toDataURL("image/jpeg", .82));
+  }
+  return out;
+}
+/* ---------- PowerPoint (.pptx) ---------- */
+async function pptxToImages(file, prog) {
+  if (GOOGLE_CLIENT_ID) {
+    try { return { slides: await pptxViaGoogle(file, prog), note: "Googleドライブで変換しました。" }; }
+    catch (e) {
+      console.warn(e);
+      if (e.code === "cancel") throw new Error("Googleへのログインがキャンセルされました");
+      toast("Googleでの変換ができなかったため、簡易変換に切り替えます（" + e.message + "）", 6000);
+    }
+  }
+  const slides = await pptxInBrowser(file, (i, n) => prog(`PowerPointを変換中（簡易）… ${i}/${n}`, i / n * .5));
+  return { slides, note: "ブラウザ内の簡易変換です。図形・表・SmartArt・数式などがずれることがあります。崩れている場合は PowerPoint で「ファイル → エクスポート → PDF」で保存したPDFを使ってください。" };
+}
+let gToken = null;
+function googleToken() {
+  if (gToken && gToken.exp > Date.now() + 60000) return Promise.resolve(gToken.t);
+  return loadScript(LIB.gis).then(() => new Promise((ok, ng) => {
+    const tc = google.accounts.oauth2.initTokenClient({
+      client_id: GOOGLE_CLIENT_ID, scope: "https://www.googleapis.com/auth/drive.file",
+      callback: r => { if (r.error) { const e = new Error(r.error_description || r.error); e.code = "cancel"; ng(e); } else { gToken = { t: r.access_token, exp: Date.now() + (r.expires_in || 3600) * 1000 }; ok(gToken.t); } },
+      error_callback: r => { const e = new Error(r.message || r.type || "ログインできませんでした"); e.code = r.type === "popup_closed" ? "cancel" : "popup"; ng(e); },
+    });
+    tc.requestAccessToken();
+  }));
+}
+async function pptxViaGoogle(file, prog) {
+  prog("Googleにログイン中…", .05);
+  const tok = await googleToken();
+  const H = { Authorization: "Bearer " + tok };
+  prog("Googleドライブにアップロード中…", .15);
+  const fd = new FormData();
+  fd.append("metadata", new Blob([JSON.stringify({ name: "ClassLive一時変換_" + file.name.replace(/\.pptx$/i, ""), mimeType: "application/vnd.google-apps.presentation" })], { type: "application/json" }));
+  fd.append("file", file, file.name);
+  const up = await fetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id", { method: "POST", headers: H, body: fd });
+  if (!up.ok) throw new Error("アップロード失敗 " + up.status);
+  const { id } = await up.json();
+  try {
+    prog("Googleスライドで変換中…", .3);
+    const ex = await fetch(`https://www.googleapis.com/drive/v3/files/${id}/export?mimeType=application/pdf`, { headers: H });
+    if (!ex.ok) { const t = await ex.text(); throw new Error(/exportSizeLimitExceeded|too large/i.test(t) ? "ファイルが大きすぎます（10MB超）" : "変換失敗 " + ex.status); }
+    const pdf = await ex.arrayBuffer();
+    return await pdfToImages(pdf, (i, n) => prog(`スライドを画像に変換中… ${i}/${n}`, .3 + i / n * .2));
+  } finally {
+    fetch(`https://www.googleapis.com/drive/v3/files/${id}`, { method: "DELETE", headers: H }).catch(() => {});
+  }
+}
+async function pptxInBrowser(file, onProg) {
+  await loadScript(LIB.pptx); await loadScript(LIB.h2i);
+  const buf = await file.arrayBuffer();
+  const host = document.createElement("div");
+  host.style.cssText = "position:fixed;left:-20000px;top:0;background:#fff";
+  document.body.appendChild(host);
+  try {
+    const probe = pptxPreview.init(host, { width: 960, height: 540, mode: "slide" });
+    const meta = await probe.load(buf.slice(0));
+    const ratio = meta && meta.width && meta.height ? meta.height / meta.width : 9 / 16;
+    probe.destroy && probe.destroy(); host.innerHTML = "";
+    const W = 960, Hh = Math.round(W * ratio); // ライブラリの標準サイズで描画し、書き出し時に拡大
+    host.style.width = W + "px"; host.style.height = Hh + "px";
+    const pv = pptxPreview.init(host, { width: W, height: Hh, mode: "slide" });
+    await pv.load(buf);
+    const n = pv.slideCount, out = [];
+    for (let i = 0; i < n; i++) {
+      onProg(i + 1, n);
+      if (i > 0) pv.removeCurrentSlide();
+      pv.renderSingleSlide(i);
+      await new Promise(r => setTimeout(r, 250));
+      await document.fonts?.ready;
+      const el = host.querySelector(".pptx-preview-slide-wrapper") || host;
+      out.push(await htmlToImage.toJpeg(el, { quality: .85, pixelRatio: 1600 / W, backgroundColor: "#fff", width: W, height: Hh }));
+    }
+    return out;
+  } finally { host.remove(); }
+}
+function reviewSlides(slides, note) {
+  return new Promise(ok => {
+    const m = modal(`<h3 style="margin-top:0">スライドの確認（${slides.length}枚）</h3>
+      ${note ? `<div class="banner" style="margin-bottom:10px">${esc(note)}</div>` : ""}
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;max-height:52vh;overflow:auto">
+        ${slides.map((u, i) => `<div style="position:relative"><img src="${u}" style="width:100%;border:1px solid var(--line);border-radius:6px;display:block"><span class="pill" style="position:absolute;left:4px;bottom:4px;font-size:.7rem">${i + 1}</span></div>`).join("")}</div>
+      <div class="row" style="margin-top:14px;justify-content:flex-end"><button id="rvNo">やり直す</button><button class="primary" id="rvOk">この内容で授業を開始</button></div>`);
+    m.querySelector(".modal").style.maxWidth = "860px";
+    let done = false; const fin = v => { if (done) return; done = true; m.close(); ok(v); };
+    $("#rvOk", m).onclick = () => fin(true); $("#rvNo", m).onclick = () => fin(false);
+    m.onclick = e => { if (e.target === m) fin(false); };
+  });
+}
+function makeSampleSlides() {
+  const S = [
+    { t: "サンプル講義", s: "ClassLive の使い方デモ", big: true },
+    { t: "今日の流れ", b: ["スライドは先生の操作に合わせて自動で切り替わります", "わからない時は「🤔 もう一度」ボタンで先生に伝えよう", "質問は匿名で送れます（いいねで人気順に）"] },
+    { t: "Q1. 練習問題", b: ["日本で一番高い山はどれか。", "1. 富士山　2. 北岳　3. 奥穂高岳　4. 槍ヶ岳　5. 間ノ岳"], tag: "スマホで回答してください" },
+    { t: "ランダム指名", b: ["先生が「ランダム指名」を押すと…", "当たった人のスマホに通知が届きます", "「答えます／考えます／わかりません」で返事をしよう"] },
+    { t: "まとめ", b: ["スライド同期・指名・投票・質問を体験しました", "授業後は「メモ」タブから自分のメモを保存できます"] },
+  ];
+  return S.map((s, i) => {
+    const c = document.createElement("canvas"); c.width = 1600; c.height = 900; const x = c.getContext("2d");
+    const g = x.createLinearGradient(0, 0, 1600, 900); g.addColorStop(0, "#f7f8ff"); g.addColorStop(1, "#e7eaff");
+    x.fillStyle = g; x.fillRect(0, 0, 1600, 900);
+    x.fillStyle = "#3b4cca"; x.fillRect(0, 0, 1600, 14);
+    const F = 'system-ui,"Hiragino Sans","Noto Sans JP","Yu Gothic",sans-serif';
+    x.fillStyle = "#1b1d2a";
+    if (s.big) { x.font = `800 110px ${F}`; x.textAlign = "center"; x.fillText(s.t, 800, 420); x.font = `400 52px ${F}`; x.fillStyle = "#555b7a"; x.fillText(s.s, 800, 510); }
+    else {
+      x.font = `800 76px ${F}`; x.fillText(s.t, 110, 170);
+      x.fillStyle = "#3b4cca"; x.fillRect(110, 200, 120, 8);
+      x.font = `400 46px ${F}`; x.fillStyle = "#2a2d40";
+      s.b.forEach((l, j) => x.fillText((s.tag ? "" : "・") + l, 110, 330 + j * 100));
+      if (s.tag) { x.fillStyle = "#f5a524"; x.fillRect(110, 640, 640, 80); x.fillStyle = "#1b1000"; x.font = `700 40px ${F}`; x.fillText("📱 " + s.tag, 140, 695); }
+    }
+    x.font = `400 28px ${F}`; x.fillStyle = "#8a90ad"; x.textAlign = "right"; x.fillText(`${i + 1} / ${S.length}`, 1540, 860);
+    return c.toDataURL("image/jpeg", .82);
+  });
+}
+async function createSession(title, slides, prog) {
+  let code; for (let i = 0; i < 5; i++) { code = rid(6, "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"); if (!(await DB.get(SP(code) + "/meta"))) break; }
+  const key = rid(16);
+  for (let i = 0; i < slides.length; i++) { prog(`スライドをアップロード中… ${i + 1}/${slides.length}`, .5 + (i + 1) / slides.length * .5); await DB.set(`${SP(code)}/slides/${i}`, slides[i]); }
+  await DB.set(SP(code) + "/state", { slide: 0, maxSlide: 0, showQR: true, qrCorner: false, overlay: null });
+  await DB.set(SP(code) + "/meta", { title, createdAt: DB.now(), slideCount: slides.length, keyHash: hash(key) });
+  const list = lsGet("classlive-sessions", []) || [];
+  list.unshift({ code, key, title, at: Date.now() }); lsSet("classlive-sessions", list.slice(0, 20));
+  DB.flush?.();
+  location.href = `?h=${code}&k=${key}`;
+}
+
+/* ============================ Shared control (teacher & projector) ============================ */
+function makeCtrl(code, getState, getMeta) {
+  const P = SP(code);
+  return {
+    go(n) {
+      const st = getState() || {}, cnt = (getMeta() || {}).slideCount || 1;
+      n = Math.max(0, Math.min(cnt - 1, n));
+      if (n === st.slide) return;
+      DB.update(P + "/state", { slide: n, maxSlide: Math.max(st.maxSlide || 0, n) });
+    },
+    next() { this.go(((getState() || {}).slide || 0) + 1); },
+    prev() { this.go(((getState() || {}).slide || 0) - 1); },
+    st(patch) { return DB.update(P + "/state", patch); },
+  };
+}
+function keyNav(ctrl, extra = {}) {
+  addEventListener("keydown", e => {
+    if (/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) || e.metaKey || e.ctrlKey || e.altKey) return;
+    if (["ArrowRight", "PageDown", " ", "ArrowDown", "Enter"].includes(e.key)) { e.preventDefault(); ctrl.next(); }
+    else if (["ArrowLeft", "PageUp", "ArrowUp", "Backspace"].includes(e.key)) { e.preventDefault(); ctrl.prev(); }
+    else if (extra[e.key.toLowerCase()]) { e.preventDefault(); extra[e.key.toLowerCase()](); }
+  });
+}
+const slideCache = {};
+function getSlide(code, i) {
+  const k = code + "/" + i;
+  return slideCache[k] ||= DB.get(`${SP(code)}/slides/${i}`).then(v => { if (!v) delete slideCache[k]; return v; });
+}
+function badKey() { app.innerHTML = `<div class="home"><div class="card"><h2>このURLでは開けません</h2><p class="muted">授業が見つからないか、先生用のキーが正しくありません。最初の画面から開き直してください。</p><a href="${baseUrl()}">トップへ</a></div></div>`; }
+
+/* ============================ Teacher console ============================ */
+async function teacherConsole(code, key) {
+  const P = SP(code);
+  const meta0 = await DB.get(P + "/meta");
+  if (!meta0 || meta0.keyHash !== hash(key)) return badKey();
+  { const hk = new URLSearchParams(location.hash.slice(1)).get("g"); if (hk) { lsSet(GEM_KEY, hk); lsSet(ENG_KEY, "gemini"); history.replaceState(null, "", location.pathname + location.search); } }
+  const T = { meta: meta0, state: {}, parts: {}, calls: {}, polls: {}, answers: {}, qs: {}, oqs: {}, oans: {}, tab: "call", exclude: true, slides: [] };
+  const ctrl = makeCtrl(code, () => T.state, () => T.meta);
+  document.title = "先生 | " + meta0.title;
+  app.innerHTML = `
+  <div class="tc">
+    <header>
+      <div class="logo" style="width:30px;height:30px;font-size:.8rem">CL</div>
+      <h2 title="${esc(meta0.title)}">${esc(meta0.title)}</h2>
+      <span class="pill">参加コード <span class="code">${code}</span></span>
+      <span class="pill" id="hdCount"><span class="dot live"></span>0人</span>
+      <span class="grow"></span>
+      <span class="row" style="gap:4px"><span class="small muted">⏱</span>
+        <button data-timer="30">30秒</button><button data-timer="60">1分</button><button data-timer="180">3分</button>
+        <button id="timerStop" class="hide"><span class="timerchip" id="timerChip"></span> ■</button></span>
+      <button id="btnQR" title="Q キー">QR全画面</button>
+      <button id="btnQRmini" class="hide-m">QR小</button>
+      <button id="btnClear" title="Esc キー">スライドのみ</button>
+      <button class="primary hide-m" id="btnProj">🖥 投影画面を開く</button>
+      <button id="btnMenu">⋯</button>
+    </header>
+    <main>
+      <section class="stage">
+        ${demoBanner()}
+        <div class="meter" id="meter"></div>
+        <div class="slidebox" id="cur"><span class="ph">読み込み中…</span></div>
+        <div class="navrow">
+          <button class="big" id="prev">◀ 前へ</button>
+          <div class="cnt" id="cnt">– / –</div>
+          <button class="big primary" id="next">次へ ▶</button>
+          <span class="grow"></span>
+          <div class="nextprev"><div class="small muted">次のスライド<br><span id="nextImg"></span></div></div>
+        </div>
+        <div class="film" id="film"></div>
+        <div class="small muted shortcut">ショートカット：→ / ← / PageDown / PageUp（プレゼンリモコン対応）・R ランダム指名・Q QR表示・Esc オーバーレイを消す</div>
+      </section>
+      <aside class="side">
+        <div class="tabs">
+          <button data-tab="call" class="cur">🎯 指名</button>
+          <button data-tab="oral">🎤 口頭</button>
+          <button data-tab="poll">📊 投票</button>
+          <button data-tab="qa">🙋 質問<span id="qaBadge"></span></button>
+          <button data-tab="people">👥 参加者</button>
+        </div>
+        <div class="panel" data-panel="call">
+          <label>学生への質問（任意・学生のスマホに表示されます）</label>
+          <textarea id="callQ" rows="2" placeholder="例：このスライドのポイントを一言で説明してください"></textarea>
+          <label class="row" style="color:var(--ink);gap:6px"><input type="checkbox" id="exclude" checked> 全員が1回当たるまで同じ人を当てない</label>
+          <button class="primary big" id="btnCall" style="width:100%;margin-top:8px">🎲 ランダム指名（R）</button>
+          <div id="callNow"></div>
+          <div class="sec">指名の履歴</div>
+          <div class="list" id="callHist"></div>
+        </div>
+        <div class="panel hide" data-panel="oral">
+          <div class="small muted">口頭で質問すると文字起こしされ、全員のスマホに問題として届きます。学生は文字か音声で回答します（指名はしません）。</div>
+          <button class="big mic" id="micBtn" style="margin-top:10px">🎤 話して問題を作る（V）</button>
+          <div class="lvl hide" id="lvl"><i></i></div>
+          <div class="small" id="lvlHint" style="min-height:1.2em;margin-top:4px"></div>
+          <div class="interim" id="micInterim"></div>
+          <div class="small muted hide" id="micNoSupport" style="margin-bottom:6px">このブラウザは音声認識に対応していません。Chrome・Edge・Safari を使うか、下に手入力してください。</div>
+          <label>問題文（文字起こし結果・送る前に修正できます）</label>
+          <textarea id="oqText" rows="3" placeholder="例：X線とγ線の違いは何ですか"></textarea>
+          <div class="row" style="margin-top:6px"><button id="oqClean">✨「えー」「あのー」を除去</button><button class="ghost" id="oqClear">クリア</button></div>
+          <button class="primary big" id="oqSend" style="width:100%;margin-top:10px">📣 全員に出題（自由回答）</button>
+          <div class="row" style="margin-top:8px"><span class="small muted">選択式で出す：</span><button data-oqpoll="ox">○ ×</button><button data-oqpoll="4">4択 A〜D</button><button data-oqpoll="5">5択 1〜5</button></div>
+          <div id="oqNow"></div>
+          <details class="set" id="micSet"><summary>⚙ 音声認識の設定（聞き取りが弱いとき）</summary>
+            <label>文字起こしの方式</label>
+            <select id="engSel"><option value="browser">ブラウザ標準（無料・話しながら文字になる）</option><option value="gemini">AI高精度（Gemini・話し終えてから清書）</option></select>
+            <div id="gemBox">
+              <label>Gemini APIキー（このパソコンにだけ保存されます）</label>
+              <div class="row" style="flex-wrap:nowrap"><input type="password" id="gemKey" placeholder="AIza…" autocomplete="off"><button id="gemSave">保存</button></div>
+              <label class="row" style="color:var(--ink);gap:6px"><input type="checkbox" id="gemSlide"> 表示中のスライドも送り、専門用語を当てやすくする</label>
+              <div class="small muted">キーは <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Google AI Studio</a> で作れます。録音とスライド画像は文字起こしのため Google に送信されます。</div>
+            </div>
+            <label>マイク</label>
+            <select id="micSel"><option value="">既定のマイク</option></select>
+            <div class="small muted" id="micSelNote"></div>
+            <button id="micTest" style="margin-top:8px">🎙 マイクテスト（5秒）</button>
+            <div class="small muted" style="margin-top:8px">💡 いちばん効くのは<b>マイクを口に近づけること</b>です。「⋯」メニューのQRを先生のスマホで読むと、スマホがワイヤレスマイク兼リモコンになります。</div>
+          </details>
+          <div class="sec">これまでの口頭質問</div>
+          <div class="list" id="oqHist"></div>
+        </div>
+        <div class="panel hide" data-panel="poll">
+          <div id="pollNow"></div>
+          <div class="sec">クイック投票（問題はスライドに表示）</div>
+          <div class="row">
+            <button data-quick="5">5択 1〜5</button><button data-quick="4">4択 A〜D</button>
+            <button data-quick="ox">○ ×</button><button data-quick="und">理解度</button>
+          </div>
+          <div class="sec">質問を入力して投票</div>
+          <input type="text" id="pq" placeholder="質問文（例：正しいのはどれか）">
+          <div class="opts" id="popts" style="margin-top:8px"></div>
+          <div class="row"><button id="padd">＋ 選択肢</button><span class="grow"></span>
+            <select id="pcorrect" style="width:auto"></select></div>
+          <button class="primary" id="pstart" style="width:100%;margin-top:10px">投票を開始</button>
+          <div class="sec">これまでの投票</div>
+          <div class="list" id="pollHist"></div>
+        </div>
+        <div class="panel hide" data-panel="qa">
+          <div class="small muted">学生が匿名（または記名）で送った質問です。いいねが多い順。</div>
+          <div class="list" id="qaList"></div>
+        </div>
+        <div class="panel hide" data-panel="people">
+          <div class="row"><b id="pplHead"></b><span class="grow"></span><button id="csv">⬇ 出席・成績CSV</button></div>
+          <div class="list" id="pplList"></div>
+        </div>
+      </aside>
+    </main>
+    <div class="mbar"><button id="mPrev">◀</button><button id="mMic">🎤 口頭</button><button id="mCall">🎲 指名</button><button id="mNext" class="primary">▶</button></div>
+  </div>`;
+
+  /* ---- slides ---- */
+  const cnt = meta0.slideCount;
+  Promise.all([...Array(cnt)].map((_, i) => getSlide(code, i))).then(arr => {
+    T.slides = arr;
+    $("#film").innerHTML = arr.map((u, i) => `<button data-go="${i}"><img src="${u || ""}" alt="スライド${i + 1}"><span>${i + 1}</span></button>`).join("");
+    $$("#film [data-go]").forEach(b => b.onclick = () => ctrl.go(+b.dataset.go));
+    renderStage();
+  });
+  function renderStage() {
+    const s = T.state.slide || 0;
+    const u = T.slides[s];
+    $("#cur").innerHTML = u ? `<img src="${u}" alt="">` : `<span class="ph">読み込み中…</span>`;
+    $("#cnt").textContent = `${s + 1} / ${cnt}`;
+    $("#prev").disabled = s <= 0; $("#next").disabled = s >= cnt - 1;
+    const n = T.slides[s + 1];
+    $("#nextImg").innerHTML = n ? `<img src="${n}" style="width:160px;border-radius:6px;margin-top:4px">` : (s + 1 >= cnt ? "（最後のスライド）" : "");
+    $$("#film [data-go]").forEach(b => b.classList.toggle("cur", +b.dataset.go === s));
+    const curBtn = $(`#film [data-go="${s}"]`); curBtn?.scrollIntoView({ block: "nearest", inline: "center", behavior: "smooth" });
+    renderMeter();
+  }
+  function renderMeter() {
+    const s = T.state.slide || 0;
+    const on = Object.values(T.parts).filter(isOnline);
+    const c = {}; for (const p of on) if (p.react && p.react.s === s) c[p.react.t] = (c[p.react.t] || 0) + 1;
+    $("#meter").innerHTML = `<span class="small muted" style="align-self:center">このスライドへの反応：</span>` + REACTS.map(r => {
+      const n = c[r.k] || 0; const warn = r.k === "again" && n >= 3 && n / Math.max(1, on.length) >= .2;
+      return `<span class="pill ${warn ? "warn" : ""}">${r.e} ${r.t} <b>${n}</b></span>`;
+    }).join("");
+  }
+
+  /* ---- header controls ---- */
+  $("#prev").onclick = () => ctrl.prev(); $("#next").onclick = () => ctrl.next();
+  $("#btnQR").onclick = () => ctrl.st({ showQR: !T.state.showQR });
+  $("#btnQRmini").onclick = () => ctrl.st({ qrCorner: !T.state.qrCorner });
+  $("#btnClear").onclick = () => ctrl.st({ overlay: null, showQR: false });
+  $("#btnProj").onclick = () => window.open(`?p=${code}&k=${key}`, "classlive-proj", "width=1280,height=720");
+  $$("[data-timer]").forEach(b => b.onclick = () => { const sec = +b.dataset.timer; ctrl.st({ timer: { end: DB.now() + sec * 1000, total: sec } }); });
+  $("#timerStop").onclick = () => ctrl.st({ timer: null });
+  setInterval(() => {
+    const t = T.state.timer; const left = t ? t.end - DB.now() : 0;
+    $("#timerStop").classList.toggle("hide", !t);
+    if (t) $("#timerChip").textContent = left > 0 ? fmtSec(left) : "終了";
+    if (t && left < -15000) ctrl.st({ timer: null });
+  }, 250);
+  $("#btnMenu").onclick = async () => {
+    const gk = lsGet(GEM_KEY, "");
+    const remote = `${baseUrl()}?h=${code}&k=${key}` + (gk && lsGet(ENG_KEY, "") === "gemini" ? `#g=${encodeURIComponent(gk)}` : "");
+    const m = modal(`
+      <h3 style="margin-top:0">メニュー</h3>
+      <div class="sec">学生の参加用URL</div>
+      <div class="row"><input type="text" readonly value="${esc(joinUrl(code))}" class="grow"><button data-copy="${esc(joinUrl(code))}">コピー</button></div>
+      <div class="sec">📱 スマホをリモコンにする（先生専用・他人に見せないでください）</div>
+      <div class="row" style="align-items:flex-start"><div class="qr" id="remoteQR" style="width:150px"></div>
+        <div class="small muted grow">このQRを先生のスマホで読み取ると、スマホからスライド送り・ランダム指名・投票ができます。教室を歩きながら操作できます。</div></div>
+      <div class="sec">授業の終了</div>
+      <div class="row"><button id="mEnd">授業を終了（学生に終了を表示）</button><button class="danger" id="mDel">データを削除</button></div>
+      <div class="row" style="margin-top:16px"><a href="${baseUrl()}">← トップに戻る</a><span class="grow"></span><button data-close>閉じる</button></div>`);
+    $("#remoteQR", m).innerHTML = await qrSvg(remote);
+    $$("[data-copy]", m).forEach(b => b.onclick = () => navigator.clipboard.writeText(b.dataset.copy).then(() => toast("コピーしました")));
+    $("#mEnd", m).onclick = async () => { await DB.update(P + "/meta", { ended: !T.meta.ended }); toast(T.meta.ended ? "授業を再開しました" : "授業を終了しました"); m.close(); };
+    $("#mDel", m).onclick = async () => {
+      if (!confirm("この授業のスライド・参加者・投票などのデータをすべて削除します。CSVは先に保存しましたか？")) return;
+      await DB.remove(P);
+      lsSet("classlive-sessions", (lsGet("classlive-sessions", []) || []).filter(s => s.code !== code));
+      location.href = baseUrl();
+    };
+  };
+  keyNav(ctrl, { v: () => { if (T.tab !== "oral") $('[data-tab="oral"]').click(); micToggle(); }, r: () => randomCall(), q: () => ctrl.st({ showQR: !T.state.showQR }), escape: () => ctrl.st({ overlay: null, showQR: false }) });
+
+  /* ---- tabs ---- */
+  $$("[data-tab]").forEach(b => b.onclick = () => {
+    T.tab = b.dataset.tab;
+    $$("[data-tab]").forEach(x => x.classList.toggle("cur", x === b));
+    $$("[data-panel]").forEach(p => p.classList.toggle("hide", p.dataset.panel !== T.tab));
+  });
+
+  /* ---- random call ---- */
+  $("#exclude").onchange = e => T.exclude = e.target.checked;
+  $("#btnCall").onclick = () => randomCall();
+  function randomCall(pidForce, qOverride) {
+    let pid, p;
+    if (pidForce) { pid = pidForce; p = T.parts[pid]; }
+    else {
+      const online = Object.entries(T.parts).filter(([, p]) => isOnline(p));
+      if (!online.length) return toast("オンラインの参加者がいません");
+      let pool = online;
+      if (T.exclude) {
+        const called = new Set(Object.values(T.calls).map(c => c.pid));
+        const rest = online.filter(([id]) => !called.has(id));
+        if (rest.length) pool = rest; else toast("全員が1回ずつ指名されたので、全員から選びます");
+      }
+      const last = T.calls[T.state.callId]?.pid;
+      if (pool.length > 1) pool = pool.filter(([id]) => id !== last);
+      [pid, p] = pool[randInt(pool.length)];
+    }
+    if (!p) return;
+    const id = DB.push(P + "/calls", { pid, name: p.name, num: p.num || "", q: qOverride ?? $("#callQ").value.trim(), at: DB.now(), status: "pending", slide: T.state.slide || 0 });
+    ctrl.st({ callId: id, overlay: "call", showQR: false });
+    if (T.tab !== "call") $('[data-tab="call"]').click();
+  }
+  function renderCall() {
+    const c = T.calls[T.state.callId];
+    if (!c) { $("#callNow").innerHTML = ""; }
+    else {
+      const [lab, cls] = CALL_ST[c.status] || CALL_ST.pending;
+      const on = isOnline(T.parts[c.pid]);
+      $("#callNow").innerHTML = `<div class="callcard">
+        <div class="small muted">指名中</div>
+        <div class="nm">${esc(c.name)} さん</div>
+        ${c.num ? `<div class="small muted">${esc(c.num)}</div>` : ""}
+        ${c.q ? `<div style="margin:6px 0">「${esc(c.q)}」</div>` : ""}
+        <span class="status ${cls}">${lab}</span>${on ? "" : ` <span class="small" style="color:var(--bad)">（オフライン）</span>`}
+        <div class="row" style="justify-content:center;margin-top:10px">
+          <button id="cAgain">🎲 もう一人</button>
+          <button id="cProj">${T.state.overlay === "call" ? "投影を消す" : "投影する"}</button>
+          <button id="cDone">✓ 終了</button>
+        </div></div>`;
+      $("#cAgain").onclick = () => randomCall();
+      $("#cProj").onclick = () => ctrl.st({ overlay: T.state.overlay === "call" ? null : "call" });
+      $("#cDone").onclick = () => ctrl.st({ callId: null, overlay: T.state.overlay === "call" ? null : T.state.overlay });
+    }
+    const hist = Object.entries(T.calls).sort((a, b) => b[1].at - a[1].at).slice(0, 30);
+    $("#callHist").innerHTML = hist.length ? hist.map(([, c]) => {
+      const [lab, cls] = CALL_ST[c.status] || CALL_ST.pending;
+      return `<div class="item"><span class="small muted">${fmtTime(c.at)}</span><div class="t"><b>${esc(c.name)}</b>${c.q ? `<div class="small muted">${esc(c.q)}</div>` : ""}</div><span class="status ${cls} small">${lab}</span></div>`;
+    }).join("") : `<div class="small muted">まだ指名していません</div>`;
+  }
+
+  /* ---- oral questions (口頭質問) ---- */
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const IOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  let rec = null, recOn = false, busy = false, aiBase = "", aiLive = "";
+  let mic = null; // { stream, ac, analyser, proc, chunks, raf, t0 }
+  const eng = () => (lsGet(ENG_KEY, "browser") === "gemini" && lsGet(GEM_KEY, "")) ? "gemini" : "browser";
+  if (!SR) { $("#micNoSupport").classList.remove("hide"); }
+  function updMic() {
+    const b = $("#micBtn");
+    b.classList.toggle("rec", recOn); b.disabled = busy || (!SR && eng() !== "gemini");
+    b.textContent = busy ? "⏳ AIで文字起こし中…" : recOn ? "⏹ 話し終わったら押す（V）" : `🎤 話して問題を作る（V）${eng() === "gemini" ? "・AI高精度" : ""}`;
+    const mb = $("#mMic"); if (mb) { mb.classList.toggle("rec", recOn); mb.textContent = busy ? "⏳" : recOn ? "⏹ 停止" : "🎤 口頭"; }
+    $("#lvl").classList.toggle("hide", !recOn && !mic);
+  }
+  async function openMic(record) {
+    const dev = lsGet(MIC_KEY, "");
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: { deviceId: dev ? { exact: dev } : undefined, echoCancellation: true, noiseSuppression: true, autoGainControl: true, channelCount: 1 } });
+    const ac = new (window.AudioContext || window.webkitAudioContext)(); await ac.resume();
+    const src = ac.createMediaStreamSource(stream);
+    const analyser = ac.createAnalyser(); analyser.fftSize = 1024; src.connect(analyser);
+    mic = { stream, ac, analyser, chunks: [], t0: performance.now(), peak: 0 };
+    if (record) {
+      const proc = ac.createScriptProcessor(4096, 1, 1);
+      proc.onaudioprocess = e => mic && mic.chunks.push(new Float32Array(e.inputBuffer.getChannelData(0)));
+      src.connect(proc); proc.connect(ac.destination); mic.proc = proc;
+    }
+    const buf = new Float32Array(analyser.fftSize);
+    const loop = () => {
+      if (!mic) return;
+      analyser.getFloatTimeDomainData(buf);
+      let sum = 0; for (const v of buf) sum += v * v; const rms = Math.sqrt(sum / buf.length);
+      mic.peak = Math.max(mic.peak * 0.995, rms);
+      const lv = $("#lvl"); lv.firstElementChild.style.width = Math.min(100, rms * 500) + "%";
+      const quiet = performance.now() - mic.t0 > 2500 && mic.peak < 0.03;
+      lv.classList.toggle("low", quiet);
+      $("#lvlHint").innerHTML = quiet ? `<span style="color:var(--accent)">🔈 声が小さく届いています。マイクに近づくか、スマホをマイクにしてください</span>` : "";
+      mic.raf = requestAnimationFrame(loop);
+    };
+    loop();
+    return mic;
+  }
+  function closeMic() {
+    if (!mic) return null;
+    const m = mic; mic = null;
+    cancelAnimationFrame(m.raf);
+    try { m.proc && m.proc.disconnect(); } catch (e) {}
+    m.stream.getTracks().forEach(t => t.stop());
+    const rate = m.ac.sampleRate; m.ac.close().catch(() => {});
+    $("#lvl").firstElementChild.style.width = "0"; $("#lvlHint").textContent = "";
+    return { chunks: m.chunks, rate };
+  }
+  function startBrowserSR(toTextarea) {
+    if (!SR || (IOS && !toTextarea)) return;
+    rec = new SR(); rec.lang = "ja-JP"; rec.interimResults = true; rec.continuous = true;
+    rec.onresult = e => {
+      let interim = "";
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const r = e.results[i];
+        if (r.isFinal) { if (toTextarea) { const ta = $("#oqText"); ta.value = (ta.value + r[0].transcript).trim(); } else aiLive += r[0].transcript; }
+        else interim += r[0].transcript;
+      }
+      $("#micInterim").textContent = toTextarea ? (interim ? "…" + interim : "") : "（下書き）" + aiLive + interim;
+    };
+    rec.onerror = e => { if (e.error === "not-allowed" || e.error === "service-not-allowed") { toast("マイクの使用が許可されていません（アドレスバーの🔒からマイクを許可してください）", 6000); if (toTextarea) micStop(); } };
+    rec.onend = () => { if (recOn) { try { rec.start(); } catch (e) {} } };
+    try { rec.start(); } catch (e) {}
+  }
+  let autoStop = 0;
+  async function micStart() {
+    if (recOn || busy) return;
+    const ai = eng() === "gemini";
+    if (!ai && !SR) return toast("このブラウザは音声認識に対応していません。Chrome か Edge を使うか、AI高精度を設定してください", 6000);
+    recOn = true; aiLive = ""; aiBase = $("#oqText").value.trim(); updMic();
+    try { await openMic(ai); } catch (e) {
+      if (ai) { recOn = false; updMic(); return toast("マイクを開けませんでした：" + (e.name === "NotAllowedError" ? "マイクが許可されていません" : e.message), 6000); }
+    }
+    startBrowserSR(!ai);
+    clearTimeout(autoStop); autoStop = setTimeout(() => recOn && micStop(), 90000);
+  }
+  async function micStop() {
+    if (!recOn) return;
+    recOn = false; clearTimeout(autoStop);
+    try { rec && rec.stop(); } catch (e) {} rec = null;
+    const got = closeMic();
+    if (eng() !== "gemini" || !got) { $("#micInterim").textContent = ""; updMic(); return; }
+    busy = true; updMic();
+    try {
+      const wav = encodeWav(got.chunks, got.rate, 16000);
+      if (!wav) throw new Error("録音が短すぎます");
+      const slide = $("#gemSlide").checked ? (T.slides[T.state.slide || 0] || "").split(",")[1] : null;
+      const text = await geminiTranscribe(wav, slide, T.meta.title);
+      $("#oqText").value = (aiBase + text).trim();
+      if (!text) toast("音声を聞き取れませんでした。もう一度話すか入力してください");
+    } catch (e) {
+      console.warn(e);
+      if (aiLive.trim()) $("#oqText").value = (aiBase + aiLive).trim();
+      toast("AI文字起こしに失敗：" + e.message + (aiLive.trim() ? "（ブラウザの下書きを入れました）" : ""), 7000);
+    } finally { busy = false; $("#micInterim").textContent = ""; updMic(); }
+  }
+  function micToggle() { recOn ? micStop() : micStart(); }
+  $("#micBtn").onclick = micToggle;
+  // 設定
+  const setUI = () => {
+    $("#engSel").value = lsGet(ENG_KEY, "browser");
+    $("#gemBox").classList.toggle("hide", $("#engSel").value !== "gemini");
+    $("#gemKey").value = lsGet(GEM_KEY, "");
+    $("#gemSlide").checked = lsGet("classlive-gemslide", true);
+    $("#micSelNote").textContent = eng() === "gemini" ? "AI高精度ではここで選んだマイクで録音します。" : "ブラウザ標準方式はパソコンの「既定のマイク」を使います（Windowsの「サウンド設定」で変更）。外付けマイクを選びたいときは AI高精度 にしてください。";
+    updMic();
+  };
+  $("#engSel").onchange = () => { lsSet(ENG_KEY, $("#engSel").value); if ($("#engSel").value === "gemini" && !lsGet(GEM_KEY, "")) toast("Gemini APIキーを入力して「保存」を押してください"); setUI(); };
+  $("#gemSave").onclick = () => { lsSet(GEM_KEY, $("#gemKey").value.trim()); toast($("#gemKey").value.trim() ? "保存しました" : "キーを削除しました"); setUI(); };
+  $("#gemSlide").onchange = () => lsSet("classlive-gemslide", $("#gemSlide").checked);
+  $("#micSel").onchange = () => { lsSet(MIC_KEY, $("#micSel").value); };
+  async function listMics() {
+    try {
+      const ds = (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === "audioinput");
+      const cur = lsGet(MIC_KEY, "");
+      $("#micSel").innerHTML = `<option value="">既定のマイク</option>` + ds.filter(d => d.deviceId && d.deviceId !== "default").map((d, i) => `<option value="${esc(d.deviceId)}" ${d.deviceId === cur ? "selected" : ""}>${esc(d.label || "マイク " + (i + 1))}</option>`).join("");
+    } catch (e) {}
+  }
+  $("#micSet").ontoggle = () => { if ($("#micSet").open) listMics(); };
+  $("#micTest").onclick = async () => {
+    if (recOn || mic) return;
+    try { await openMic(false); updMic(); $("#micTest").disabled = true; listMics(); toast("5秒間、普段の声で話してみてください。緑のバーが半分くらいまで動けばOKです", 5000); }
+    catch (e) { return toast("マイクを開けませんでした：" + e.message, 6000); }
+    setTimeout(() => { closeMic(); $("#micTest").disabled = false; updMic(); }, 5000);
+  };
+  setUI();
+  $("#oqClear").onclick = () => { $("#oqText").value = ""; };
+  $("#oqClean").onclick = () => { $("#oqText").value = cleanSpeech($("#oqText").value); };
+  async function takeText() { await micStop(); const t = cleanSpeech($("#oqText").value); if (!t) { toast("問題文がありません。🎤で話すか入力してください"); return null; } $("#oqText").value = ""; return t; }
+  $("#oqSend").onclick = async () => {
+    const text = await takeText(); if (!text) return;
+    const id = DB.push(P + "/oqs", { text, at: DB.now(), open: true, showAnswers: false, slide: T.state.slide || 0 });
+    ctrl.st({ oqId: id, oqPick: null, overlay: "oq", showQR: false });
+  };
+  $$("[data-oqpoll]").forEach(b => b.onclick = async () => { const text = await takeText(); if (!text) return; startPoll(text, QUICK[b.dataset.oqpoll], -1); $('[data-tab="poll"]').click(); toast("投票タブで正解を選べます"); });
+  // スマホ用の下部バー
+  $("#mPrev").onclick = () => ctrl.prev(); $("#mNext").onclick = () => ctrl.next();
+  $("#mMic").onclick = () => { if (T.tab !== "oral") $('[data-tab="oral"]').click(); micToggle(); setTimeout(() => $("#oqText").scrollIntoView({ block: "center", behavior: "smooth" }), 100); };
+  $("#mCall").onclick = () => randomCall();
+  function renderOQ() {
+    const id = T.state.oqId, q = T.oqs[id];
+    if (!q) $("#oqNow").innerHTML = "";
+    else {
+      const ans = Object.entries(T.oans[id] || {}).sort((a, b) => a[1].at - b[1].at);
+      const on = Object.values(T.parts).filter(isOnline).length;
+      $("#oqNow").innerHTML = `<div class="callcard" style="text-align:left">
+        <div class="row"><b class="grow">${esc(q.text)}</b><span class="pill">${q.open ? "受付中" : "締切"}</span></div>
+        <div class="small muted" style="margin:4px 0">回答 <b>${ans.length}</b> / オンライン ${on}人</div>
+        <div class="row" style="margin-top:8px">
+          <button id="oOpen">${q.open ? "締め切る" : "受付再開"}</button>
+          <button id="oShow" class="${q.showAnswers ? "on" : ""}">回答を全員に公開</button>
+          <button id="oProj" class="${T.state.overlay === "oq" && !T.state.oqPick ? "on" : ""}">投影</button>
+          <button id="oCall" ${ans.length ? "" : "disabled"}>🎲 回答者から指名</button>
+          <button id="oEnd">終了</button>
+        </div></div>
+        <div class="list">${ans.map(([pid, a]) => `<div class="item ans"><div class="t"><div class="who">${esc(T.parts[pid]?.name || "?")}${a.voice ? " · 🎤音声" : ""} · ${fmtTime(a.at)}</div>${esc(a.text)}</div>
+          <button data-opick="${pid}" class="${T.state.overlay === "oq" && T.state.oqPick === pid ? "on" : ""}">投影</button><button data-ocall="${pid}" ${isOnline(T.parts[pid]) ? "" : "disabled"}>指名</button></div>`).join("") || `<div class="small muted">回答を待っています…</div>`}</div>`;
+      const OP = `${P}/oqs/${id}`;
+      $("#oOpen").onclick = () => DB.update(OP, { open: !q.open });
+      $("#oShow").onclick = () => DB.update(OP, { showAnswers: !q.showAnswers });
+      $("#oProj").onclick = () => ctrl.st(T.state.overlay === "oq" && !T.state.oqPick ? { overlay: null } : { overlay: "oq", oqPick: null, showQR: false });
+      $("#oCall").onclick = () => { const pool = ans.map(([pid]) => pid).filter(pid => isOnline(T.parts[pid])); if (!pool.length) return toast("オンラインの回答者がいません"); randomCall(pool[randInt(pool.length)], `${q.text}（あなたの回答をみんなに説明してください）`); };
+      $("#oEnd").onclick = () => { DB.update(OP, { open: false }); ctrl.st({ oqId: null, oqPick: null, overlay: T.state.overlay === "oq" ? null : T.state.overlay }); };
+      $$("[data-opick]").forEach(b => b.onclick = () => { const on = T.state.overlay === "oq" && T.state.oqPick === b.dataset.opick; ctrl.st(on ? { oqPick: null } : { overlay: "oq", oqPick: b.dataset.opick, showQR: false }); });
+      $$("[data-ocall]").forEach(b => b.onclick = () => randomCall(b.dataset.ocall, `${q.text}（あなたの回答をみんなに説明してください）`));
+    }
+    const hist = Object.entries(T.oqs).sort((a, b) => b[1].at - a[1].at);
+    $("#oqHist").innerHTML = hist.length ? hist.map(([qid, q]) => `<div class="item"><span class="small muted">${fmtTime(q.at)}</span><div class="t">${esc(q.text)}<div class="small muted">${Object.keys(T.oans[qid] || {}).length}人回答</div></div>${qid === id ? `<span class="pill">表示中</span>` : `<button data-oreshow="${qid}">再表示</button>`}</div>`).join("") : `<div class="small muted">まだありません</div>`;
+    $$("[data-oreshow]").forEach(b => b.onclick = () => ctrl.st({ oqId: b.dataset.oreshow, oqPick: null, overlay: "oq" }));
+  }
+
+  /* ---- polls ---- */
+  let optVals = ["", "", "", ""];
+  function renderOptsForm() {
+    $("#popts").innerHTML = optVals.map((v, i) => `<div class="row" style="flex-wrap:nowrap"><b style="width:18px">${OPT_LABELS[i]}</b><input type="text" data-opt="${i}" value="${esc(v)}" placeholder="選択肢 ${OPT_LABELS[i]}">${optVals.length > 2 ? `<button class="ghost" data-rm="${i}">✕</button>` : ""}</div>`).join("");
+    $$("[data-opt]").forEach(inp => inp.oninput = () => optVals[+inp.dataset.opt] = inp.value);
+    $$("[data-rm]").forEach(b => b.onclick = () => { optVals.splice(+b.dataset.rm, 1); renderOptsForm(); });
+    $("#pcorrect").innerHTML = `<option value="-1">正解：なし</option>` + optVals.map((_, i) => `<option value="${i}">正解：${OPT_LABELS[i]}</option>`).join("");
+    $("#padd").disabled = optVals.length >= 8;
+  }
+  renderOptsForm();
+  $("#padd").onclick = () => { optVals.push(""); renderOptsForm(); };
+  const QUICK = { "5": ["1", "2", "3", "4", "5"], "4": ["A", "B", "C", "D"], ox: ["○", "×"], und: ["よくわかった", "だいたいわかった", "あまりわからない", "まったくわからない"] };
+  $$("[data-quick]").forEach(b => b.onclick = () => startPoll("", QUICK[b.dataset.quick], -1, b.dataset.quick === "und"));
+  $("#pstart").onclick = () => {
+    const opts = optVals.map(s => s.trim()).filter(Boolean);
+    if (opts.length < 2) return toast("選択肢を2つ以上入力してください");
+    const c = +$("#pcorrect").value;
+    startPoll($("#pq").value.trim(), opts, c >= opts.length ? -1 : c);
+    $("#pq").value = ""; optVals = ["", "", "", ""]; renderOptsForm();
+  };
+  function startPoll(q, options, correct, survey = false) {
+    const id = DB.push(P + "/polls", { q, options, correct, open: true, showResults: false, showCorrect: false, survey, at: DB.now(), slide: T.state.slide || 0 });
+    ctrl.st({ pollId: id, overlay: "poll", showQR: false });
+  }
+  function tally(pid) {
+    const p = T.polls[pid]; const a = T.answers[pid] || {};
+    const n = (p?.options || []).map(() => 0); for (const v of Object.values(a)) if (n[v.c] != null) n[v.c]++;
+    return { n, total: Object.keys(a).length };
+  }
+  function bars(p, t, showCorrect) {
+    return p.options.map((o, i) => {
+      const pct = t.total ? Math.round(t.n[i] / t.total * 100) : 0;
+      const ok = showCorrect && p.correct === i;
+      return `<div class="bar ${ok ? "correct" : ""}"><i style="width:${pct}%"></i><span>${ok ? "✅ " : ""}${p.options.length > 2 && !/^[A-Z0-9]$/.test(o) ? OPT_LABELS[i] + ". " : ""}${esc(o)}</span><span>${t.n[i]}人（${pct}%）</span></div>`;
+    }).join("");
+  }
+  function renderPoll() {
+    const id = T.state.pollId, p = T.polls[id];
+    if (!p) { $("#pollNow").innerHTML = ""; }
+    else {
+      const t = tally(id); const on = Object.values(T.parts).filter(isOnline).length;
+      $("#pollNow").innerHTML = `<div class="callcard" style="text-align:left">
+        <div class="row"><b class="grow">${esc(p.q || "（スライドの問題）")}</b><span class="pill">${p.open ? "受付中" : "締切"}</span></div>
+        <div class="small muted" style="margin:4px 0">回答 <b>${t.total}</b> / オンライン ${on}人</div>
+        ${bars(p, t, true)}
+        ${p.survey ? "" : `<div class="row" style="margin-top:6px"><span class="small muted">正解</span><select id="pc" style="width:auto">${[`<option value="-1">なし</option>`, ...p.options.map((o, i) => `<option value="${i}" ${p.correct === i ? "selected" : ""}>${esc(o)}</option>`)].join("")}</select></div>`}
+        <div class="row" style="margin-top:10px">
+          <button id="pOpen">${p.open ? "締め切る" : "受付再開"}</button>
+          <button id="pRes" class="${p.showResults ? "on" : ""}">結果を公開</button>
+          ${p.survey ? "" : `<button id="pCor" class="${p.showCorrect ? "on" : ""}" ${p.correct >= 0 ? "" : "disabled"}>正解を発表</button>`}
+          <button id="pProj" class="${T.state.overlay === "poll" ? "on" : ""}">投影</button>
+          <button id="pEnd">終了</button>
+        </div></div>`;
+      const PP = `${P}/polls/${id}`;
+      $("#pOpen").onclick = () => DB.update(PP, { open: !p.open });
+      $("#pRes").onclick = () => DB.update(PP, { showResults: !p.showResults });
+      if ($("#pCor")) $("#pCor").onclick = () => DB.update(PP, { showCorrect: !p.showCorrect, showResults: true, open: false });
+      if ($("#pc")) $("#pc").onchange = e => DB.update(PP, { correct: +e.target.value });
+      $("#pProj").onclick = () => ctrl.st({ overlay: T.state.overlay === "poll" ? null : "poll" });
+      $("#pEnd").onclick = () => { DB.update(PP, { open: false }); ctrl.st({ pollId: null, overlay: T.state.overlay === "poll" ? null : T.state.overlay }); };
+    }
+    const hist = Object.entries(T.polls).sort((a, b) => b[1].at - a[1].at);
+    $("#pollHist").innerHTML = hist.length ? hist.map(([pid, p]) => {
+      const t = tally(pid); const rate = p.correct >= 0 && t.total ? Math.round(t.n[p.correct] / t.total * 100) + "% 正解" : "";
+      return `<div class="item"><span class="small muted">${fmtTime(p.at)}</span><div class="t">${esc(p.q || `スライド${(p.slide || 0) + 1}の問題（${p.options.length}択）`)}<div class="small muted">${t.total}人回答 ${rate}</div></div>${pid === id ? `<span class="pill">表示中</span>` : `<button data-reshow="${pid}">再表示</button>`}</div>`;
+    }).join("") : `<div class="small muted">まだ投票はありません</div>`;
+    $$("[data-reshow]").forEach(b => b.onclick = () => ctrl.st({ pollId: b.dataset.reshow, overlay: "poll" }));
+  }
+
+  /* ---- Q&A ---- */
+  function renderQA() {
+    const list = Object.entries(T.qs).sort((a, b) => (!!a[1].done - !!b[1].done) || (Object.keys(b[1].votes || {}).length - Object.keys(a[1].votes || {}).length) || (a[1].at - b[1].at));
+    const open = list.filter(([, q]) => !q.done).length;
+    $("#qaBadge").textContent = open ? ` ${open}` : "";
+    $("#qaList").innerHTML = list.length ? list.map(([id, q]) => `
+      <div class="item ${q.done ? "done" : ""}"><b style="min-width:34px;text-align:center">▲${Object.keys(q.votes || {}).length}</b>
+      <div class="t">${esc(q.text)}<div class="small muted">${q.name ? esc(q.name) : "匿名"}・${fmtTime(q.at)}</div></div>
+      <button data-qp="${id}" class="${T.state.overlay === "qa" && T.state.qaId === id ? "on" : ""}">投影</button>
+      <button data-qd="${id}">${q.done ? "戻す" : "✓"}</button>
+      <button class="ghost danger" data-qx="${id}">✕</button></div>`).join("") : `<div class="small muted" style="margin-top:10px">まだ質問はありません</div>`;
+    $$("[data-qp]").forEach(b => b.onclick = () => { const on = T.state.overlay === "qa" && T.state.qaId === b.dataset.qp; ctrl.st(on ? { overlay: null } : { overlay: "qa", qaId: b.dataset.qp, showQR: false }); });
+    $$("[data-qd]").forEach(b => b.onclick = () => DB.update(`${P}/questions/${b.dataset.qd}`, { done: !T.qs[b.dataset.qd].done }));
+    $$("[data-qx]").forEach(b => b.onclick = () => confirm("この質問を削除しますか？") && DB.remove(`${P}/questions/${b.dataset.qx}`));
+  }
+
+  /* ---- participants ---- */
+  function renderPeople() {
+    const all = Object.entries(T.parts);
+    const on = all.filter(([, p]) => isOnline(p));
+    $("#hdCount").innerHTML = `<span class="dot live"></span>${on.length}人 参加中`;
+    $("#pplHead").textContent = `オンライン ${on.length} / 参加 ${all.length}人`;
+    const callN = {}; for (const c of Object.values(T.calls)) callN[c.pid] = (callN[c.pid] || 0) + 1;
+    const s = T.state.slide || 0;
+    all.sort((a, b) => (isOnline(b[1]) - isOnline(a[1])) || String(a[1].num || a[1].name).localeCompare(String(b[1].num || b[1].name), "ja"));
+    $("#pplList").innerHTML = all.length ? all.map(([id, p]) => {
+      const r = p.react && p.react.s === s ? REACTS.find(x => x.k === p.react.t)?.e || "" : "";
+      return `<div class="item"><span class="dot ${isOnline(p) ? "live" : ""}"></span><div class="t"><b>${esc(p.name)}</b> <span class="small muted">${esc(p.num || "")}</span></div>
+      <span>${r}</span><span class="small muted">指名${callN[id] || 0}</span><button data-pick="${id}" ${isOnline(p) ? "" : "disabled"}>指名</button></div>`;
+    }).join("") : `<div class="small muted" style="margin-top:10px">まだ誰も参加していません。「QR全画面」で参加用QRを投影しましょう。</div>`;
+    $$("[data-pick]").forEach(b => b.onclick = () => randomCall(b.dataset.pick));
+  }
+  $("#csv").onclick = () => {
+    const polls = Object.entries(T.polls).sort((a, b) => a[1].at - b[1].at);
+    const oqs = Object.entries(T.oqs).sort((a, b) => a[1].at - b[1].at);
+    const head = ["名前", "学籍番号", "参加時刻", "最終状態", "指名回数", "指名への返答", "投票回答数", "正解数", "口頭質問への回答数", ...polls.map(([, p], i) => `Q${i + 1}${p.q ? ":" + p.q : ""}`), ...oqs.map(([, q], i) => `口頭${i + 1}:${q.text}`)];
+    const rows = Object.entries(T.parts).map(([id, p]) => {
+      const cs = Object.values(T.calls).filter(c => c.pid === id);
+      let ans = 0, ok = 0;
+      const per = polls.map(([pid, pl]) => { const a = (T.answers[pid] || {})[id]; if (!a) return ""; ans++; const corr = pl.correct >= 0 && a.c === pl.correct; if (corr) ok++; return pl.options[a.c] + (pl.correct >= 0 ? (corr ? "(○)" : "(×)") : ""); });
+      const oper = oqs.map(([qid]) => ((T.oans[qid] || {})[id] || {}).text || "");
+      return [p.name, p.num || "", new Date(p.joinedAt).toLocaleString("ja-JP"), isOnline(p) ? "オンライン" : "退出", cs.length, cs.map(c => (CALL_ST[c.status] || CALL_ST.pending)[0]).join(" / "), ans, ok, oper.filter(Boolean).length, ...per, ...oper];
+    });
+    const csv = [head, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\r\n");
+    download(`${T.meta.title}_${new Date().toISOString().slice(0, 10)}.csv`, "﻿" + csv, "text/csv");
+  };
+
+  /* ---- subscriptions ---- */
+  DB.on(P + "/meta", v => { if (v) T.meta = v; });
+  DB.on(P + "/state", v => {
+    T.state = v || {}; renderStage(); renderCall(); renderPoll(); renderQA(); renderOQ();
+    $("#btnQR").classList.toggle("on", !!T.state.showQR); $("#btnQRmini").classList.toggle("on", !!T.state.qrCorner);
+  });
+  DB.on(P + "/participants", v => { T.parts = v || {}; renderPeople(); renderMeter(); renderCall(); renderPoll(); });
+  DB.on(P + "/calls", v => { T.calls = v || {}; renderCall(); renderPeople(); });
+  DB.on(P + "/polls", v => { T.polls = v || {}; renderPoll(); });
+  DB.on(P + "/answers", v => { T.answers = v || {}; renderPoll(); });
+  DB.on(P + "/oqs", v => { T.oqs = v || {}; renderOQ(); });
+  DB.on(P + "/oans", v => { T.oans = v || {}; renderOQ(); });
+  let qsLoaded = false;
+  DB.on(P + "/questions", v => { const before = Object.keys(T.qs).length; T.qs = v || {}; renderQA(); if (qsLoaded && Object.keys(T.qs).length > before && T.tab !== "qa") toast("🙋 新しい質問が届きました"); qsLoaded = true; });
+  setInterval(() => { renderPeople(); renderMeter(); }, 10000);
+}
+function modal(html) {
+  const bg = document.createElement("div"); bg.className = "modal-bg";
+  bg.innerHTML = `<div class="modal">${html}</div>`;
+  document.body.appendChild(bg);
+  bg.close = () => bg.remove();
+  bg.onclick = e => { if (e.target === bg || e.target.closest("[data-close]")) bg.close(); };
+  return bg;
+}
+
+/* ============================ Projector ============================ */
+async function projectorPage(code, key) {
+  const P = SP(code);
+  const meta = await DB.get(P + "/meta");
+  if (!meta || meta.keyHash !== hash(key)) return badKey();
+  document.title = "投影 | " + meta.title;
+  const V = { state: {}, parts: {}, call: null, poll: null, answers: {}, qa: null, oq: null, oans: {}, rolled: {}, unsub: {} };
+  const ctrl = makeCtrl(code, () => V.state, () => meta);
+  const url = joinUrl(code);
+  const qr = await qrSvg(url);
+  app.innerHTML = `<div class="pj" id="pj">
+    <div class="main" id="pjMain"></div>
+    <div id="pjOv"></div>
+    <div class="qrmini hide" id="pjMini"><div class="qr">${qr}</div>コード ${code}</div>
+    <div class="timer hide" id="pjTimer"></div>
+    <div class="count" id="pjCount"></div>
+    <div class="tools"><button id="fs">⛶ 全画面（F）</button><button id="pp">◀</button><button id="nn">▶</button></div>
+  </div>`;
+  unlockAudio(); addEventListener("pointerdown", unlockAudio, { once: true });
+  $("#fs").onclick = () => document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen();
+  $("#pp").onclick = () => ctrl.prev(); $("#nn").onclick = () => ctrl.next();
+  keyNav(ctrl, { f: () => $("#fs").click(), q: () => ctrl.st({ showQR: !V.state.showQR }), escape: () => ctrl.st({ overlay: null, showQR: false }) });
+
+  let shown = -1;
+  async function renderSlide() {
+    const s = V.state.slide || 0; if (s === shown) return; shown = s;
+    const u = await getSlide(code, s); if (s !== (V.state.slide || 0)) return;
+    $("#pjMain").innerHTML = u ? `<img src="${u}" alt="">` : "";
+    if (s + 1 < meta.slideCount) getSlide(code, s + 1);
+  }
+  const onlineNames = () => Object.values(V.parts).filter(isOnline).map(p => p.name);
+  function renderOv() {
+    const st = V.state, ov = $("#pjOv");
+    const n = onlineNames().length;
+    $("#pjCount").textContent = `👥 ${n}人 参加中`;
+    if (st.showQR) {
+      const pr = joinProblems();
+      if (pr.length) {
+        if (ov.dataset.k !== "qrng") { ov.dataset.k = "qrng"; ov.innerHTML = `<div class="ov"><div style="max-width:min(1100px,86vw);font-size:3vh;line-height:1.7"><h1 style="font-size:4.6vh;margin:0 0 2vh">⚠ まだ学生のスマホからは参加できません</h1><div style="opacity:.85;margin-bottom:2vh">このままQRコードを出しても、スマホでは「使用可能なデータがありません」になります。</div><ul style="padding-left:4vh">${pr.map(x => `<li>${esc(x)}</li>`).join("")}</ul><div style="opacity:.7;font-size:2.4vh;margin-top:2vh">いまのアドレス：${esc(location.href.slice(0, 90))}…</div><div style="opacity:.7;font-size:2.4vh">（Q キー または Esc でこの表示を閉じる）</div></div></div>`; }
+        return;
+      }
+      if (ov.dataset.k !== "qr") { ov.dataset.k = "qr"; ov.innerHTML = `<div class="ov"><div class="qrfull"><div class="qr">${qr}</div><div><h1>📱 スマホで参加しよう</h1><div>カメラでQRを読み取ってください</div><div class="code">${code}</div><div class="url">${esc(url)}</div><div style="margin-top:3vh;font-size:3vh" id="pjQRn"></div></div></div></div>`; }
+      $("#pjQRn").textContent = `👥 ${n}人 参加中`;
+      return;
+    }
+    if (st.overlay === "call" && V.call) {
+      const c = V.call, k = "call:" + st.callId;
+      if (ov.dataset.k !== k) {
+        ov.dataset.k = k;
+        ov.innerHTML = `<div class="ov"><div class="call" id="pjCall"><div class="lbl">🎯 指名</div><div class="nm" id="pjName"></div><div class="q">${c.q ? "「" + esc(c.q) + "」" : ""}</div><div class="cst" id="pjSt"></div></div></div>`;
+        const fresh = DB.now() - c.at < 8000 && !V.rolled[st.callId];
+        V.rolled[st.callId] = true;
+        if (fresh) roulette(c.name); else { $("#pjName").textContent = c.name + " さん"; $("#pjCall").classList.add("landed"); }
+      }
+      const s = CALL_ST[c.status]; $("#pjSt").textContent = c.status !== "pending" && $("#pjCall").classList.contains("landed") ? s[0] : "";
+      return;
+    }
+    if (st.overlay === "poll" && V.poll) {
+      const p = V.poll, a = V.answers || {};
+      const cnt = p.options.map(() => 0); for (const v of Object.values(a)) if (cnt[v.c] != null) cnt[v.c]++;
+      const total = Object.keys(a).length;
+      ov.dataset.k = "poll";
+      ov.innerHTML = `<div class="ov"><div class="poll"><h2>📊 ${esc(p.q || "スライドの問題にスマホで回答してください")}</h2>
+        ${p.options.map((o, i) => { const pct = total ? Math.round(cnt[i] / total * 100) : 0; const ok = p.showCorrect && p.correct === i;
+          return `<div class="bar ${ok ? "correct" : ""}"><i style="width:${p.showResults ? pct : 0}%"></i><span>${ok ? "✅ " : ""}${p.options.length > 2 && !/^[A-Z0-9]$/.test(o) ? OPT_LABELS[i] + ". " : ""}${esc(o)}</span><span>${p.showResults ? `${cnt[i]}人 ${pct}%` : ""}</span></div>`; }).join("")}
+        <div class="meta">回答 ${total} / ${n}人　${p.open ? "受付中" : "締め切りました"}</div></div></div>`;
+      return;
+    }
+    if (st.overlay === "oq" && V.oq) {
+      const ans = Object.entries(V.oans || {}).sort((a, b) => a[1].at - b[1].at);
+      ov.dataset.k = "oq";
+      if (st.oqPick && V.oans[st.oqPick]) {
+        ov.innerHTML = `<div class="ov"><div class="oq"><div class="lbl">💬 みんなの回答から</div><div style="font-size:2.8vh;opacity:.7;margin-bottom:3vh">Q. ${esc(V.oq.text)}</div><div class="pick">${esc(V.oans[st.oqPick].text)}</div></div></div>`;
+      } else {
+        ov.innerHTML = `<div class="ov"><div class="oq"><div class="lbl">🎤 先生からの質問 ── スマホで回答してください</div><h2>${esc(V.oq.text)}</h2>
+          <div class="meta">回答 ${ans.length} / ${n}人　${V.oq.open ? "受付中" : "締め切りました"}</div>
+          ${V.oq.showAnswers ? `<div class="wall">${ans.slice(-24).map(([, a]) => `<div>${esc(a.text)}</div>`).join("")}</div>` : ""}</div></div>`;
+      }
+      return;
+    }
+    if (st.overlay === "qa" && V.qa) {
+      ov.dataset.k = "qa";
+      ov.innerHTML = `<div class="ov"><div><div style="text-align:center;font-size:3vh;opacity:.7;margin-bottom:3vh">🙋 学生からの質問　▲${Object.keys(V.qa.votes || {}).length}</div><div class="qa">${esc(V.qa.text)}</div></div></div>`;
+      return;
+    }
+    ov.dataset.k = ""; ov.innerHTML = "";
+  }
+  function roulette(final) {
+    let names = onlineNames(); if (names.length < 2) names = [final, "？？？"];
+    const el = $("#pjName"); let i = 0, delay = 50; const t0 = performance.now();
+    const step = () => {
+      if (!el.isConnected) return;
+      const el2 = performance.now() - t0;
+      if (el2 > 2600) { el.textContent = final + " さん"; $("#pjCall").classList.add("landed"); chime("call"); renderOv(); return; }
+      el.textContent = names[(i++ + randInt(names.length)) % names.length];
+      delay = 50 + Math.pow(el2 / 2600, 3) * 320; setTimeout(step, delay);
+    };
+    step();
+  }
+  function sub(name, path, cb) { V.unsub[name]?.(); V.unsub[name] = path ? DB.on(path, cb) : null; if (!path) cb(null); }
+  let lastCall, lastPoll, lastQa, lastOq, timerEnded = {};
+  DB.on(P + "/state", v => {
+    V.state = v || {}; renderSlide();
+    if (V.state.callId !== lastCall) { lastCall = V.state.callId; sub("call", lastCall && `${P}/calls/${lastCall}`, c => { V.call = c; renderOv(); }); }
+    if (V.state.pollId !== lastPoll) { lastPoll = V.state.pollId; sub("poll", lastPoll && `${P}/polls/${lastPoll}`, p => { V.poll = p; renderOv(); }); sub("ans", lastPoll && `${P}/answers/${lastPoll}`, a => { V.answers = a || {}; renderOv(); }); }
+    if (V.state.oqId !== lastOq) { lastOq = V.state.oqId; sub("oq", lastOq && `${P}/oqs/${lastOq}`, q => { V.oq = q; renderOv(); }); sub("oans", lastOq && `${P}/oans/${lastOq}`, a => { V.oans = a || {}; renderOv(); }); }
+    if (V.state.qaId !== lastQa) { lastQa = V.state.qaId; sub("qa", lastQa && `${P}/questions/${lastQa}`, q => { V.qa = q; renderOv(); }); }
+    $("#pjMini").classList.toggle("hide", !V.state.qrCorner || !!V.state.showQR);
+    renderOv();
+  });
+  DB.on(P + "/participants", v => { V.parts = v || {}; if (!$("#pjName") || $("#pjCall")?.classList.contains("landed")) renderOv(); });
+  setInterval(() => {
+    const t = V.state.timer, el = $("#pjTimer");
+    if (!t) { el.classList.add("hide"); return; }
+    const left = t.end - DB.now(); el.classList.remove("hide");
+    el.textContent = left > 0 ? "⏱ " + fmtSec(left) : "⏱ 終了";
+    el.classList.toggle("low", left < 10000);
+    if (left <= 0 && !timerEnded[t.end]) { timerEnded[t.end] = 1; chime("end"); }
+  }, 200);
+}
+
+/* ============================ Student ============================ */
+async function studentPage(code) {
+  const P = SP(code);
+  const store = DB.mode === "demo" ? sessionStorage : localStorage;
+  const meta = await DB.get(P + "/meta");
+  if (!meta) { app.innerHTML = `<div class="join"><div class="card"><h2>授業が見つかりません</h2><p class="muted">参加コード <span class="code">${esc(code)}</span> の授業はありません。QRコードを読み直してください。</p></div></div>`; return; }
+  document.title = meta.title + " | ClassLive";
+  const K = "classlive-me-" + code;
+  let me = null; try { me = JSON.parse(store.getItem(K)); } catch (e) {}
+  if (me && !(await DB.get(`${P}/participants/${me.pid}`))) me = null;
+  if (me) return enter(me);
+
+  app.innerHTML = `<div class="join">
+    <div class="brand"><div class="logo">CL</div><h1 style="font-size:1.2rem">ClassLive</h1></div>
+    <div class="card">
+      <div class="small muted">参加する授業</div>
+      <h2 style="margin:4px 0 14px">${esc(meta.title)}</h2>
+      <label>名前（先生に表示されます）</label>
+      <input type="text" id="nm" maxlength="20" autocomplete="name" placeholder="例：山田 花子">
+      <label>学籍番号（任意）</label>
+      <input type="text" id="num" maxlength="20" inputmode="text" placeholder="例：A12345">
+      <button class="primary big" id="go" style="width:100%;margin-top:16px">参加する</button>
+      <p class="small muted" style="margin-bottom:0">参加すると、指名されたときに通知が届くよう許可を求めます。授業中はこの画面を開いたままにしてください。</p>
+    </div></div>`;
+  const nmI = $("#nm"); nmI.value = lsGet("classlive-myname", ""); $("#num").value = lsGet("classlive-mynum", "");
+  $("#go").onclick = async () => {
+    const name = nmI.value.trim(); if (!name) { nmI.focus(); return toast("名前を入力してください"); }
+    const num = $("#num").value.trim();
+    unlockAudio();
+    if ("Notification" in window && Notification.permission === "default") { try { await Notification.requestPermission(); } catch (e) {} }
+    lsSet("classlive-myname", name); lsSet("classlive-mynum", num);
+    me = { pid: rid(14), name, num };
+    await DB.set(`${P}/participants/${me.pid}`, { name, num, joinedAt: DB.now(), online: true, lastSeen: DB.now() });
+    store.setItem(K, JSON.stringify(me));
+    enter(me);
+  };
+  nmI.onkeydown = e => e.key === "Enter" && $("#num").focus();
+
+  function enter(me) {
+    const S = { state: {}, view: null, tab: "slide", call: null, poll: null, answers: {}, qs: {}, alerted: {}, pollHidden: {}, unsub: {}, oq: null, oans: {}, oqHidden: {}, oqBuilt: null, oqNotified: {} };
+    app.innerHTML = `<div class="st">
+      <header><span class="dot" id="conn"></span><span class="ttl">${esc(meta.title)}</span><span id="hTimer"></span><span class="small muted">${esc(me.name)}</span></header>
+      <div class="body">
+        <div data-v="slide">
+          <div class="slide" id="sl"><span class="ph">先生の操作を待っています…</span></div>
+          <div class="snav"><button id="sp">◀</button><span class="small muted" id="sc"></span><button id="sn">▶</button></div>
+          <div class="small muted" style="margin:2px 2px 4px">このスライドの理解度を先生に伝える</div>
+          <div class="react" id="react"></div>
+          <div id="notifHint"></div>
+        </div>
+        <div data-v="qa" class="hide">
+          <div class="card">
+            <b>先生に質問する</b>
+            <textarea id="qText" rows="3" maxlength="200" placeholder="わからなかったことを気軽にどうぞ" style="margin-top:8px"></textarea>
+            <div class="row" style="margin-top:8px"><label class="row grow" style="margin:0;color:var(--ink);gap:6px"><input type="checkbox" id="qName"> 名前を表示する</label><button class="primary" id="qSend">送信</button></div>
+            <div class="small muted" style="margin-top:6px">チェックしなければ匿名で送られます。いいね（▲）が多い質問が上に並びます。</div>
+          </div>
+          <div class="list" id="qList" style="margin-top:12px"></div>
+        </div>
+        <div data-v="memo" class="hide">
+          <div class="card">
+            <b id="memoTitle">メモ</b>
+            <textarea id="memo" rows="8" placeholder="このスライドについてのメモ（この端末にだけ保存されます）" style="margin-top:8px"></textarea>
+            <div class="row" style="margin-top:8px"><span class="small muted grow" id="memoSaved"></span><button id="memoDl">⬇ 全メモを保存</button></div>
+          </div>
+        </div>
+      </div>
+      <nav class="bottom"><div>
+        <button data-t="slide" class="cur"><b>🖼</b>スライド</button>
+        <button data-t="qa"><b>🙋</b>質問</button>
+        <button data-t="memo"><b>📝</b>メモ</button>
+      </div></nav>
+      <div id="sheet"></div><div id="oqSheet"></div><div id="mini"></div><div id="mini2"></div><div id="callAl"></div>
+    </div>`;
+    DB.presence(`${P}/participants/${me.pid}`);
+    DB.onConnection(ok => $("#conn").classList.toggle("live", ok));
+    addEventListener("pointerdown", unlockAudio);
+    // 画面が消えないように（対応端末のみ）
+    let wl = null; const keepAwake = async () => { try { if ("wakeLock" in navigator && document.visibilityState === "visible") wl = await navigator.wakeLock.request("screen"); } catch (e) {} };
+    keepAwake(); document.addEventListener("visibilitychange", keepAwake);
+    if ("Notification" in window && Notification.permission === "default") {
+      $("#notifHint").innerHTML = `<div class="banner" style="margin-top:12px">🔔 指名の通知をオンにすると、画面を見ていなくても気づけます。<button id="nOn" style="margin-left:6px">通知をオン</button></div>`;
+      $("#nOn").onclick = async () => { await Notification.requestPermission(); $("#notifHint").innerHTML = ""; };
+    }
+
+    /* tabs */
+    $$("[data-t]").forEach(b => b.onclick = () => {
+      S.tab = b.dataset.t; $$("[data-t]").forEach(x => x.classList.toggle("cur", x === b));
+      $$("[data-v]").forEach(v => v.classList.toggle("hide", v.dataset.v !== S.tab));
+      if (S.tab === "memo") loadMemo();
+    });
+
+    /* slides */
+    const cur = () => S.view ?? (S.state.slide || 0);
+    let shownSlide = -1;
+    async function renderSlide() {
+      const live = S.state.slide || 0, max = S.state.maxSlide || 0, s = cur();
+      $("#sc").innerHTML = `${s + 1} / ${meta.slideCount}` + (S.view != null ? `（ライブは ${live + 1}）` : ` <span style="color:var(--ok)">● ライブ</span>`);
+      $("#sp").disabled = s <= 0; $("#sn").disabled = s >= max;
+      if (s !== shownSlide) {
+        shownSlide = s;
+        const u = await getSlide(code, s); if (s !== cur()) return;
+        $("#sl").innerHTML = (u ? `<img src="${u}" alt="スライド${s + 1}">` : `<span class="ph">スライドを読み込めませんでした</span>`) + (S.view != null ? `<button class="live-back" id="lb">● ライブに戻る</button>` : "");
+        if ($("#lb")) $("#lb").onclick = () => { S.view = null; renderSlide(); };
+        if (S.tab === "memo") loadMemo();
+      }
+      renderReact();
+    }
+    const browse = d => { const max = S.state.maxSlide || 0; let n = cur() + d; if (n < 0 || n > max) return; S.view = n === (S.state.slide || 0) ? null : n; renderSlide(); };
+    $("#sp").onclick = () => browse(-1); $("#sn").onclick = () => browse(1);
+    let tx = null; $("#sl").addEventListener("touchstart", e => tx = e.touches[0].clientX, { passive: true });
+    $("#sl").addEventListener("touchend", e => { if (tx == null) return; const dx = e.changedTouches[0].clientX - tx; if (Math.abs(dx) > 50) browse(dx < 0 ? 1 : -1); tx = null; });
+
+    /* reactions */
+    let myReact = null;
+    function renderReact() {
+      const live = S.state.slide || 0;
+      $("#react").innerHTML = REACTS.map(r => `<button data-r="${r.k}" class="${myReact && myReact.s === live && myReact.t === r.k ? "on" : ""}"><b>${r.e}</b>${r.t}</button>`).join("");
+      $$("[data-r]").forEach(b => b.onclick = () => {
+        const live = S.state.slide || 0;
+        myReact = myReact && myReact.s === live && myReact.t === b.dataset.r ? null : { t: b.dataset.r, s: live, at: DB.now() };
+        DB.set(`${P}/participants/${me.pid}/react`, myReact); renderReact();
+      });
+    }
+
+    /* timer */
+    setInterval(() => {
+      const t = S.state.timer; const el = $("#hTimer");
+      if (!t) { el.innerHTML = ""; return; }
+      const left = t.end - DB.now();
+      el.innerHTML = left > -10000 ? `<span class="headtimer">⏱ ${left > 0 ? fmtSec(left) : "終了"}</span>` : "";
+    }, 250);
+
+    /* call */
+    let flashT = 0;
+    function onCall(id, c) {
+      if (!c) { $("#callAl").innerHTML = ""; return; }
+      if (c.pid !== me.pid) {
+        $("#callAl").innerHTML = "";
+        if (!S.alerted[id] && DB.now() - c.at < 20000) { S.alerted[id] = 1; setTimeout(() => toast(`🎯 ${c.name} さんが指名されました`), Math.max(0, c.at + 2700 - DB.now())); }
+        return;
+      }
+      if (c.status === "pending") {
+        if (DB.now() - c.at > 10 * 60 * 1000) return;
+        if (!S.alerted[id]) { S.alerted[id] = 1; setTimeout(() => showCallAlert(id), Math.max(0, Math.min(3000, c.at + 2700 - DB.now()))); }
+        else if (!$(".alert-call")) showCallAlert(id);
+      } else if (c.status === "think") {
+        $("#callAl").innerHTML = `<div class="mini-banner amber"><span>🤔 指名中：考えがまとまったら</span><button id="readyB" style="border:none">✋ 答えます</button></div>`;
+        $("#readyB").onclick = () => DB.update(`${P}/calls/${id}`, { status: "ok", respondedAt: DB.now() });
+      } else { $("#callAl").innerHTML = ""; stopFlash(); }
+    }
+    function showCallAlert(id) {
+      const c = S.call; if (!c || c.pid !== me.pid || c.status !== "pending" || S.state.callId !== id) return;
+      $("#callAl").innerHTML = `<div class="alert-call"><div class="ring">🙋</div><h1>あなたが指名されました！</h1>
+        ${c.q ? `<div class="q">${esc(c.q)}</div>` : `<div class="q">先生から質問があります</div>`}
+        <div class="btns"><button class="go" data-cs="ok">✋ 答えます</button><button data-cs="think">🤔 少し考えさせてください</button><button data-cs="dunno">🙇 わかりません</button></div></div>`;
+      $$("[data-cs]").forEach(b => b.onclick = () => { DB.update(`${P}/calls/${id}`, { status: b.dataset.cs, respondedAt: DB.now() }); stopFlash(); });
+      chime("call");
+      try { navigator.vibrate?.([400, 150, 400, 150, 800]); } catch (e) {}
+      if (document.visibilityState !== "visible") sysNotify("🙋 あなたが指名されました", c.q || "先生から質問があります");
+      startFlash();
+    }
+    const baseTitle = document.title;
+    function startFlash() { clearInterval(flashT); let f = 0; flashT = setInterval(() => { document.title = (f++ % 2) ? "🔔 指名されました！" : baseTitle; if (document.visibilityState === "visible" && f > 6) stopFlash(); }, 800); }
+    function stopFlash() { clearInterval(flashT); document.title = baseTitle; }
+
+    /* poll */
+    function renderPoll() {
+      const id = S.state.pollId, p = S.poll;
+      if (!id || !p || S.pollHidden[id] || oqVisible()) {
+        $("#sheet").innerHTML = "";
+        $("#mini").innerHTML = id && p && (p.open || p.showResults) ? `<div class="mini-banner"><span>📊 投票${p.open ? "受付中" : "の結果"}</span><button id="pOpenB" style="border:none">開く</button></div>` : "";
+        if ($("#pOpenB")) $("#pOpenB").onclick = () => { delete S.pollHidden[id]; renderPoll(); };
+        return;
+      }
+      $("#mini").innerHTML = "";
+      const mine = (S.answers || {})[me.pid];
+      const total = Object.keys(S.answers || {}).length;
+      const cnt = p.options.map(() => 0); for (const a of Object.values(S.answers || {})) if (cnt[a.c] != null) cnt[a.c]++;
+      let verdict = "";
+      if (p.showCorrect && p.correct >= 0) verdict = mine ? (mine.c === p.correct ? `<div style="font-size:1.4rem;font-weight:800;color:var(--ok)">⭕ 正解！</div>` : `<div style="font-size:1.4rem;font-weight:800;color:var(--bad)">❌ 不正解</div>`) : `<div class="muted">正解は ${esc(p.options[p.correct])} でした</div>`;
+      $("#sheet").innerHTML = `<div class="sheet">
+        <div class="row"><b class="grow">📊 ${esc(p.q || "スライドの問題に回答してください")}</b><button class="ghost" id="pHide">最小化</button></div>
+        ${verdict}
+        ${p.showResults
+          ? p.options.map((o, i) => { const pct = total ? Math.round(cnt[i] / total * 100) : 0; const ok = p.showCorrect && p.correct === i;
+              return `<div class="bar ${ok ? "correct" : ""}"><i style="width:${pct}%"></i><span>${ok ? "✅ " : ""}${mine && mine.c === i ? "👉 " : ""}${esc(o)}</span><span>${pct}%</span></div>`; }).join("")
+          : p.options.map((o, i) => `<button class="opt ${mine && mine.c === i ? "sel" : ""}" data-c="${i}" ${p.open ? "" : "disabled"}>${p.options.length > 2 && !/^[A-Z0-9]$/.test(o) ? OPT_LABELS[i] + ". " : ""}${esc(o)}</button>`).join("")}
+        <div class="small muted" style="margin-top:6px">${p.open ? (mine ? "回答しました（締切まで変更できます）" : "タップして回答") : "締め切りました"}</div>
+      </div>`;
+      $("#pHide").onclick = () => { S.pollHidden[id] = 1; renderPoll(); };
+      $$("[data-c]").forEach(b => b.onclick = () => { DB.set(`${P}/answers/${id}/${me.pid}`, { c: +b.dataset.c, at: DB.now() }); try { navigator.vibrate?.(30); } catch (e) {} });
+    }
+
+    /* oral question (口頭質問への回答) */
+    const SRs = window.SpeechRecognition || window.webkitSpeechRecognition;
+    let srec = null, srecOn = false, usedVoice = false;
+    function oqVisible() { const id = S.state.oqId; return !!(id && S.oq && !S.oqHidden[id]); }
+    function stopDict() { srecOn = false; try { srec && srec.stop(); } catch (e) {} const b = $("#oqMic"); if (b) { b.classList.remove("rec"); b.textContent = "🎤 音声で入力"; } const it = $("#oqInterim"); if (it) it.textContent = ""; }
+    function startDict() {
+      if (!SRs) return toast("この端末ではキーボードのマイクボタンで音声入力してください", 4000);
+      srecOn = true; usedVoice = true; $("#oqMic").classList.add("rec"); $("#oqMic").textContent = "⏹ 入力を止める";
+      srec = new SRs(); srec.lang = "ja-JP"; srec.interimResults = true; srec.continuous = true;
+      srec.onresult = e => {
+        let interim = "";
+        for (let i = e.resultIndex; i < e.results.length; i++) {
+          const r = e.results[i];
+          if (r.isFinal) { const ta = $("#oqIn"); if (ta) ta.value = (ta.value + r[0].transcript).trim(); } else interim += r[0].transcript;
+        }
+        const it = $("#oqInterim"); if (it) it.textContent = interim ? "…" + interim : "";
+      };
+      srec.onerror = e => { if (e.error === "not-allowed" || e.error === "service-not-allowed") { toast("マイクが許可されていません。キーボードのマイクボタンでも音声入力できます", 5000); stopDict(); } };
+      srec.onend = () => { if (srecOn) { try { srec.start(); } catch (e) {} } };
+      try { srec.start(); } catch (e) {}
+    }
+    function renderOQ() {
+      const id = S.state.oqId, q = S.oq, box = $("#oqSheet");
+      const mini = $("#mini2");
+      if (!id || !q) { if (S.oqBuilt) stopDict(); box.innerHTML = ""; mini.innerHTML = ""; S.oqBuilt = null; renderPoll(); return; }
+      // 新しい質問が届いたらお知らせ
+      if (!S.oqNotified[id]) {
+        S.oqNotified[id] = 1;
+        if (q.open && DB.now() - q.at < 120000) { chime("ping"); try { navigator.vibrate?.([200, 100, 200]); } catch (e) {} if (document.visibilityState !== "visible") sysNotify("🎤 先生から質問です", q.text); }
+      }
+      const mine = (S.oans || {})[me.pid];
+      if (S.oqHidden[id]) {
+        if (S.oqBuilt) stopDict();
+        box.innerHTML = ""; S.oqBuilt = null;
+        mini.innerHTML = `<div class="mini-banner amber second"><span>🎤 先生からの質問${q.open ? (mine ? "（回答済み）" : "（未回答）") : ""}</span><button id="oqOpenB" style="border:none">開く</button></div>`;
+        $("#oqOpenB").onclick = () => { delete S.oqHidden[id]; renderOQ(); };
+        renderPoll(); return;
+      }
+      mini.innerHTML = "";
+      if (S.oqBuilt !== id) {
+        S.oqBuilt = id; usedVoice = false;
+        box.innerHTML = `<div class="sheet" style="z-index:55">
+          <div class="row"><b class="grow">🎤 先生からの質問</b><button class="ghost" id="oqHide">最小化</button></div>
+          <div class="oqq">${esc(q.text)}</div>
+          <textarea id="oqIn" rows="3" maxlength="300" placeholder="ここに回答を入力（🎤ボタンで話して入力もできます）"></textarea>
+          <div class="interim" id="oqInterim"></div>
+          <div class="row"><button id="oqMic">🎤 音声で入力</button><span class="grow"></span><button class="primary" id="oqSub">送信</button></div>
+          <div class="small muted" id="oqSt" style="margin-top:6px"></div>
+          <div id="oqWall"></div>
+        </div>`;
+        $("#oqIn").value = mine?.text || "";
+        $("#oqHide").onclick = () => { S.oqHidden[id] = 1; renderOQ(); };
+        $("#oqMic").onclick = () => srecOn ? stopDict() : startDict();
+        $("#oqSub").onclick = () => {
+          stopDict();
+          const text = $("#oqIn").value.trim(); if (!text) return toast("回答を入力してください");
+          if (!(S.oq && S.oq.open)) return toast("締め切られています");
+          DB.set(`${P}/oans/${id}/${me.pid}`, { text, at: DB.now(), voice: usedVoice });
+          toast("回答を送信しました"); try { navigator.vibrate?.(30); } catch (e) {}
+        };
+        renderPoll();
+      }
+      // 状態の更新（入力中の文字は消さない）
+      const closed = !q.open;
+      $("#oqIn").disabled = closed; $("#oqMic").disabled = closed; $("#oqSub").disabled = closed;
+      if (closed) stopDict();
+      $("#oqSub").textContent = mine ? "修正して送信" : "送信";
+      $("#oqSt").textContent = closed ? (mine ? "締め切りました（あなたの回答は届いています）" : "締め切りました") : (mine ? "✅ 送信済み。締切までは修正できます" : "回答して「送信」を押してください");
+      const all = Object.entries(S.oans || {}).sort((a, b) => a[1].at - b[1].at);
+      $("#oqWall").innerHTML = q.showAnswers ? `<div class="sec">みんなの回答（${all.length}件・名前は表示されません）</div><div class="list">${all.map(([pid, a]) => `<div class="item"><div class="t">${pid === me.pid ? "<b>あなた：</b>" : ""}${esc(a.text)}</div></div>`).join("")}</div>` : "";
+    }
+
+    /* Q&A */
+    $("#qSend").onclick = () => {
+      const text = $("#qText").value.trim(); if (!text) return;
+      DB.push(`${P}/questions`, { text, name: $("#qName").checked ? me.name : "", pid: me.pid, at: DB.now(), votes: {} });
+      $("#qText").value = ""; toast("質問を送りました");
+    };
+    function renderQA() {
+      const list = Object.entries(S.qs).filter(([, q]) => q && q.text).sort((a, b) => (!!a[1].done - !!b[1].done) || (Object.keys(b[1].votes || {}).length - Object.keys(a[1].votes || {}).length) || (b[1].at - a[1].at));
+      $("#qList").innerHTML = list.length ? list.map(([id, q]) => {
+        const v = q.votes || {}, mine = !!v[me.pid];
+        return `<div class="item ${q.done ? "done" : ""}"><button data-vote="${id}" class="${mine ? "on" : ""}" style="min-width:52px">▲ ${Object.keys(v).length}</button>
+          <div class="t">${esc(q.text)}<div class="small muted">${q.pid === me.pid ? "あなた・" : ""}${q.name ? esc(q.name) : "匿名"}${q.done ? "・回答済み" : ""}</div></div></div>`;
+      }).join("") : `<div class="small muted">まだ質問はありません。最初の質問をどうぞ！</div>`;
+      $$("[data-vote]").forEach(b => b.onclick = () => { const id = b.dataset.vote; const on = !!(S.qs[id].votes || {})[me.pid]; DB.set(`${P}/questions/${id}/votes/${me.pid}`, on ? null : true); });
+    }
+
+    /* memo */
+    const memoKey = s => `classlive-memo-${code}-${s}`;
+    function loadMemo() { const s = cur(); $("#memoTitle").textContent = `スライド ${s + 1} のメモ`; $("#memo").value = lsGet(memoKey(s), ""); $("#memo").dataset.s = s; $("#memoSaved").textContent = ""; }
+    let memoT; $("#memo").oninput = () => { clearTimeout(memoT); memoT = setTimeout(() => { lsSet(memoKey(+$("#memo").dataset.s), $("#memo").value); $("#memoSaved").textContent = "保存しました"; }, 400); };
+    $("#memoDl").onclick = () => {
+      let out = `${meta.title}　メモ（${new Date().toLocaleDateString("ja-JP")}）\n\n`;
+      for (let i = 0; i < meta.slideCount; i++) { const m = lsGet(memoKey(i), ""); if (m) out += `■ スライド ${i + 1}\n${m}\n\n`; }
+      download(`${meta.title}_メモ.txt`, out);
+    };
+
+    /* subscriptions */
+    function sub(name, path, cb) { S.unsub[name]?.(); S.unsub[name] = path ? DB.on(path, cb) : null; if (!path) cb(null); }
+    let lastCall, lastPoll, lastOq;
+    DB.on(P + "/state", v => {
+      S.state = v || {};
+      if (S.view != null && S.view === S.state.slide) S.view = null;
+      if (S.view != null && S.view > (S.state.maxSlide || 0)) S.view = null;
+      renderSlide();
+      if (S.state.callId !== lastCall) { lastCall = S.state.callId; sub("call", lastCall && `${P}/calls/${lastCall}`, c => { S.call = c; onCall(lastCall, c); }); }
+      if (S.state.pollId !== lastPoll) { lastPoll = S.state.pollId; S.answers = {}; sub("poll", lastPoll && `${P}/polls/${lastPoll}`, p => { S.poll = p; renderPoll(); }); sub("ans", lastPoll && `${P}/answers/${lastPoll}`, a => { S.answers = a || {}; renderPoll(); }); }
+      if (S.state.oqId !== lastOq) { lastOq = S.state.oqId; S.oans = {}; S.oq = null; sub("oq", lastOq && `${P}/oqs/${lastOq}`, q => { S.oq = q; renderOQ(); }); sub("oans", lastOq && `${P}/oans/${lastOq}`, a => { S.oans = a || {}; renderOQ(); }); }
+    });
+    DB.on(P + "/questions", v => { S.qs = v || {}; renderQA(); });
+    DB.on(P + "/meta", m => {
+      if (m && m.ended) {
+        $("#mini").innerHTML = `<div class="mini-banner"><span>📕 授業は終了しました。おつかれさまでした！</span><button id="endMemo" style="border:none">メモを保存</button></div>`;
+        $("#endMemo").onclick = () => $("#memoDl").click();
+      } else if ($("#endMemo")) $("#mini").innerHTML = "";
+    });
+    DB.on(`${P}/participants/${me.pid}/react`, r => { myReact = r; renderReact(); });
+  }
+}
+async function sysNotify(title, body) {
+  if (!("Notification" in window) || Notification.permission !== "granted") return;
+  const opts = { body, tag: "classlive-call", renotify: true, requireInteraction: true, vibrate: [400, 150, 400, 150, 800], icon: "icon-192.png", data: { url: location.href } };
+  try { const reg = await navigator.serviceWorker?.getRegistration(); if (reg) { await reg.showNotification(title, opts); return; } } catch (e) {}
+  try { new Notification(title, opts); } catch (e) {}
+}
+</script>
+</body>
+</html>
