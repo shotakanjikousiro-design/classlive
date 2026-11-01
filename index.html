@@ -1463,7 +1463,8 @@ async function studentPage(code) {
     const name = nmI.value.trim(); if (!name) { nmI.focus(); return toast("名前を入力してください"); }
     const num = $("#num").value.trim();
     unlockAudio();
-    if ("Notification" in window && Notification.permission === "default") { try { await Notification.requestPermission(); } catch (e) {} }
+    // 通知の許可は待たずに先へ進む（許可ダイアログに答えるまで参加できない状態を防ぐ）
+    if ("Notification" in window && Notification.permission === "default") { try { Notification.requestPermission().catch(() => {}); } catch (e) {} }
     lsSet("classlive-myname", name); lsSet("classlive-mynum", num);
     me = { pid: rid(14), name, num };
     await DB.set(`${P}/participants/${me.pid}`, { name, num, joinedAt: DB.now(), online: true, lastSeen: DB.now() });
